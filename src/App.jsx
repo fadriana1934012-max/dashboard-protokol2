@@ -282,36 +282,50 @@ export default function App() {
   }
 
   async function handleLogin(email, password) {
-    // KEAMANAN: hanya email yang ada di AKUN_DIIZINKAN yang boleh masuk
-    const emailTerdaftar = AKUN_DIIZINKAN.find(a => a.email.toLowerCase() === email.toLowerCase());
-    if (!emailTerdaftar) {
-      showNotif("Email atau password salah. Akses ditolak.", "error");
-      return;
+    // Cek apakah email ada di daftar akun khusus (hardcoded)
+    const akunKhusus = AKUN_DIIZINKAN.find(a => a.email.toLowerCase() === email.toLowerCase());
+
+    if (akunKhusus) {
+      // Akun khusus: password harus cocok persis
+      if (akunKhusus.password !== password) {
+        showNotif("Email atau password salah. Akses ditolak.", "error");
+        return;
+      }
+      // Login ke Supabase juga
+      try { await supabase.signIn(email, password); } catch(e) {}
+      const finalRole = akunKhusus.role;
+      const finalName = akunKhusus.nama;
+      const finalDinas = akunKhusus.dinas;
+      supabase.userRole = finalRole;
+      localStorage.setItem("sb_email", email);
+      localStorage.setItem("sb_role", finalRole);
+      localStorage.setItem("sb_name", finalName);
+      localStorage.setItem("sb_dinas", finalDinas);
+      setUser({ email, role: finalRole, name: finalName, dinas: finalDinas });
+      await loadData();
+      setIsLoggedIn(true);
+      showNotif(`Selamat datang, ${finalName}!`);
+    } else {
+      // Akun daftar mandiri: validasi lewat Supabase
+      try {
+        await supabase.signIn(email, password);
+        const profile = await supabase.getProfile();
+        const finalRole = profile?.role || supabase.userRole || "admin";
+        const finalName = profile?.full_name || supabase.userName || email;
+        const finalDinas = profile?.dinas || localStorage.getItem("sb_dinas") || "";
+        supabase.userRole = finalRole;
+        localStorage.setItem("sb_email", email);
+        localStorage.setItem("sb_role", finalRole);
+        localStorage.setItem("sb_name", finalName);
+        localStorage.setItem("sb_dinas", finalDinas);
+        setUser({ email, role: finalRole, name: finalName, dinas: finalDinas });
+        await loadData();
+        setIsLoggedIn(true);
+        showNotif(`Selamat datang, ${finalName}!`);
+      } catch(e) {
+        showNotif("Email atau password salah. Akses ditolak.", "error");
+      }
     }
-    // KEAMANAN: password harus cocok persis
-    const akunValid = AKUN_DIIZINKAN.find(a => a.email.toLowerCase() === email.toLowerCase() && a.password === password);
-    if (!akunValid) {
-      showNotif("Email atau password salah. Akses ditolak.", "error");
-      return;
-    }
-    // Login ke Supabase hanya setelah validasi lokal berhasil
-    try {
-      await supabase.signIn(email, password);
-    } catch(e) {
-      // Jika Supabase gagal (misal belum terdaftar di Supabase), tetap izinkan masuk
-    }
-    const finalRole = akunValid.role;
-    const finalName = akunValid.nama;
-    const finalDinas = akunValid.dinas;
-    supabase.userRole = finalRole;
-    localStorage.setItem("sb_email", email);
-    localStorage.setItem("sb_role", finalRole);
-    localStorage.setItem("sb_name", finalName);
-    localStorage.setItem("sb_dinas", finalDinas);
-    setUser({ email, role: finalRole, name: finalName, dinas: finalDinas });
-    await loadData();
-    setIsLoggedIn(true);
-    showNotif(`Selamat datang, ${finalName}!`);
   }
 
   async function handleRegister(email, password, nama, dinas) {
