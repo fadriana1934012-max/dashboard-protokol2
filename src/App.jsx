@@ -273,12 +273,7 @@ export default function App() {
   }
 
   async function loadData() {
-    const emailKey = localStorage.getItem("sb_email")||"";
-    // Filter data berdasarkan email user - setiap akun hanya lihat datanya sendiri
-    const params = emailKey
-      ? `?select=*&order=tanggal.asc,waktu_mulai.asc&user_email=eq.${encodeURIComponent(emailKey)}`
-      : "?select=*&order=tanggal.asc,waktu_mulai.asc";
-    const data = await supabase.query("kegiatan", params);
+    const data = await supabase.query("kegiatan","?select=*&order=tanggal.asc,waktu_mulai.asc");
     if (Array.isArray(data)) setKegiatanList(data);
   }
 
@@ -341,8 +336,6 @@ export default function App() {
   }
 
   async function handleSaveKegiatan(formData) {
-    // Tambahkan user_email untuk isolasi data per akun
-    formData.user_email = user.email;
     try {
       if (modalMode==="add") {
         const body={...formData}; delete body.id; delete body.tanggalDisplay;
