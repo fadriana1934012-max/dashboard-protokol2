@@ -76,7 +76,7 @@ const supabase = {
 
 const STATUS_CONFIG = {
   akan_berlangsung: { label: "Akan Berlangsung", color: "#2563EB", bg: "#EFF6FF", dot: "#2563EB" },
-  sedang_berlangsung: { label: "Sedang Berlangsung", color: "#D97706", bg: "#FFFBEB", dot: "#D97706" },
+  sedang_berlangsung: { label: "Sedang Berlangsung", color: "#0F766E", bg: "#F0FDFA", dot: "#0F766E" },
   dibatalkan: { label: "Dibatalkan", color: "#DC2626", bg: "#FEF2F2", dot: "#DC2626" },
   selesai: { label: "Selesai", color: "#059669", bg: "#ECFDF5", dot: "#059669" },
 };
@@ -85,7 +85,7 @@ const JENIS_OPTIONS = ["kunjungan","upacara","rapat","audiensi","monitoring","la
 
 const ROLE_CONFIG = {
   admin: { label: "Admin", color: "#6D28D9", bg: "#EDE9FE" },
-  protokoler: { label: "Protokoler", color: "#0369A1", bg: "#E0F2FE" },
+  protokoler: { label: "Protokoler", color: "#0F766E", bg: "#CCFBF1" },
   tim_kreatif: { label: "Tim Kreatif", color: "#065F46", bg: "#D1FAE5" },
 };
 
@@ -113,13 +113,13 @@ function toDisplayDate(iso) {
 function LogoProtokol({ size=36 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="40" height="40" rx="10" fill="#1E3A5F"/>
+      <rect width="40" height="40" rx="10" fill="#0F766E"/>
       <rect x="9" y="7" width="15" height="20" rx="2" fill="white" opacity="0.95"/>
-      <rect x="11" y="11" width="11" height="1.5" rx="0.75" fill="#1E3A5F"/>
-      <rect x="11" y="14" width="11" height="1.5" rx="0.75" fill="#1E3A5F"/>
-      <rect x="11" y="17" width="8" height="1.5" rx="0.75" fill="#1E3A5F"/>
-      <rect x="11" y="20" width="6" height="1.5" rx="0.75" fill="#1E3A5F"/>
-      <circle cx="28" cy="28" r="8" fill="#0EA5E9"/>
+      <rect x="11" y="11" width="11" height="1.5" rx="0.75" fill="#0F766E"/>
+      <rect x="11" y="14" width="11" height="1.5" rx="0.75" fill="#0F766E"/>
+      <rect x="11" y="17" width="8" height="1.5" rx="0.75" fill="#0F766E"/>
+      <rect x="11" y="20" width="6" height="1.5" rx="0.75" fill="#0F766E"/>
+      <circle cx="28" cy="28" r="8" fill="#0F766E"/>
       <path d="M24 28l3 3 5-5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
@@ -137,10 +137,10 @@ function StatusBadge({ status, large }) {
 
 function LoadingScreen() {
   return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#F3F4F6" }}>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#F0FDFA" }}>
       <div style={{ textAlign:"center" }}>
         <div style={{ display:"flex", justifyContent:"center", marginBottom:14 }}><LogoProtokol size={52}/></div>
-        <div style={{ fontSize:15, fontWeight:600, color:"#1E3A5F" }}>Memuat Dashboard...</div>
+        <div style={{ fontSize:15, fontWeight:600, color:"#134E4A" }}>Memuat Dashboard...</div>
       </div>
     </div>
   );
@@ -148,7 +148,7 @@ function LoadingScreen() {
 
 const L = { display:"block", fontSize:12, fontWeight:600, color:"#374151", marginBottom:5 };
 const I = { width:"100%", padding:"9px 12px", border:"1.5px solid #E5E7EB", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", color:"#111827", background:"white" };
-const BtnPrimary = { width:"100%", padding:12, background:"#1E3A5F", color:"white", border:"none", borderRadius:8, fontSize:14, fontWeight:600, cursor:"pointer" };
+const BtnPrimary = { width:"100%", padding:12, background:"#134E4A", color:"white", border:"none", borderRadius:8, fontSize:14, fontWeight:600, cursor:"pointer" };
 
 function AuthPage({ onLogin, onRegister, notification }) {
   const [mode, setMode] = useState("login");
@@ -172,21 +172,21 @@ function AuthPage({ onLogin, onRegister, notification }) {
   }
 
   return (
-    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:"linear-gradient(160deg,#0F2950,#1E3A5F)", padding:20 }}>
+    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:"linear-gradient(160deg,#134E4A,#134E4A)", padding:20 }}>
       <div style={{ background:"white", borderRadius:16, padding:"32px 28px", width:"100%", maxWidth:420, boxShadow:"0 20px 60px rgba(0,0,0,0.3)" }}>
         <div style={{ textAlign:"center", marginBottom:22 }}>
           <div style={{ display:"flex", justifyContent:"center", marginBottom:10 }}><LogoProtokol size={48}/></div>
-          <div style={{ fontSize:15, fontWeight:800, color:"#1E3A5F", letterSpacing:0.3, lineHeight:1.4 }}>SISTEM INFORMASI DAN DOKUMENTASI</div><div style={{ fontSize:15, fontWeight:800, color:"#1E3A5F", letterSpacing:0.3, lineHeight:1.4, marginBottom:3 }}>AGENDA PIMPINAN</div><div style={{ fontSize:12, color:"#6B7280", marginTop:3 }}>Dinas Pariwisata Sulawesi Tenggara</div>
+          <div style={{ fontSize:15, fontWeight:800, color:"#134E4A", letterSpacing:0.3, lineHeight:1.4 }}>SISTEM INFORMASI DAN DOKUMENTASI</div><div style={{ fontSize:15, fontWeight:800, color:"#134E4A", letterSpacing:0.3, lineHeight:1.4, marginBottom:3 }}>AGENDA PIMPINAN</div><div style={{ fontSize:12, color:"#6B7280", marginTop:3 }}>Dinas Pariwisata Sulawesi Tenggara</div>
         </div>
 
         <div style={{ display:"flex", borderBottom:"1px solid #E5E7EB", marginBottom:20 }}>
           {[["login","Masuk"],["register","Daftar"]].map(([m,l])=>(
-            <button key={m} onClick={()=>setMode(m)} style={{ flex:1, padding:"8px 0", border:"none", background:"none", fontSize:13, fontWeight:mode===m?700:400, color:mode===m?"#1E3A5F":"#9CA3AF", borderBottom:mode===m?"2px solid #1E3A5F":"2px solid transparent", marginBottom:-1, cursor:"pointer" }}>{l}</button>
+            <button key={m} onClick={()=>setMode(m)} style={{ flex:1, padding:"8px 0", border:"none", background:"none", fontSize:13, fontWeight:mode===m?700:400, color:mode===m?"#0F766E":"#9CA3AF", borderBottom:mode===m?"2px solid #134E4A":"2px solid transparent", marginBottom:-1, cursor:"pointer" }}>{l}</button>
           ))}
         </div>
 
         {notification && (
-          <div style={{ padding:"10px 13px", borderRadius:8, marginBottom:14, fontSize:13, background:notification.type==="error"?"#FEF2F2":"#ECFDF5", color:notification.type==="error"?"#991B1B":"#065F46", border:`1px solid ${notification.type==="error"?"#FECACA":"#A7F3D0"}` }}>
+          <div style={{ padding:"10px 13px", borderRadius:8, marginBottom:14, fontSize:13, background:notification.type==="error"?"#FEF2F2":"#F0FDFA", color:notification.type==="error"?"#991B1B":"#0F766E", border:`1px solid ${notification.type==="error"?"#FECACA":"#99F6E4"}` }}>
             {notification.msg}
           </div>
         )}
@@ -205,7 +205,7 @@ function AuthPage({ onLogin, onRegister, notification }) {
               </div>
             </div>
             <button onClick={handleLogin} disabled={loading} style={BtnPrimary}>{loading?"Memverifikasi...":"Masuk"}</button>
-            <div style={{ marginTop:12, padding:11, background:"#FFFBEB", borderRadius:8, fontSize:11, color:"#92400E", border:"1px solid #FDE68A", lineHeight:1.5 }}>
+            <div style={{ marginTop:12, padding:11, background:"#F0FDFA", borderRadius:8, fontSize:11, color:"#134E4A", border:"1px solid #99F6E4", lineHeight:1.5 }}>
               Akses terbatas — hanya akun yang telah didaftarkan yang dapat masuk.
             </div>
           </div>
@@ -226,7 +226,7 @@ function AuthPage({ onLogin, onRegister, notification }) {
               <input type="password" value={konfirmPass} onChange={e=>setKonfirmPass(e.target.value)} placeholder="Ulangi password..." style={I}/>
             </div>
             <button onClick={handleRegister} disabled={loading} style={BtnPrimary}>{loading?"Mendaftarkan...":"Daftar & Buat Akun"}</button>
-            <div style={{ marginTop:12, padding:11, background:"#F0F9FF", borderRadius:8, fontSize:11, color:"#0369A1", border:"1px solid #BAE6FD", lineHeight:1.5 }}>
+            <div style={{ marginTop:12, padding:11, background:"#F0FDFA", borderRadius:8, fontSize:11, color:"#134E4A", border:"1px solid #99F6E4", lineHeight:1.5 }}>
               Setelah mendaftar, Anda akan memiliki dashboard sendiri dengan data yang terpisah dari instansi lain.
             </div>
           </div>
@@ -273,7 +273,11 @@ export default function App() {
   }
 
   async function loadData() {
-    const data = await supabase.query("kegiatan","?select=*&order=tanggal.asc,waktu_mulai.asc");
+    const emailKey = localStorage.getItem("sb_email")||"";
+    const params = emailKey
+      ? `?select=*&order=tanggal.asc,waktu_mulai.asc&user_email=eq.${encodeURIComponent(emailKey)}`
+      : "?select=*&order=tanggal.asc,waktu_mulai.asc";
+    const data = await supabase.query("kegiatan", params);
     if (Array.isArray(data)) setKegiatanList(data);
   }
 
@@ -354,6 +358,7 @@ export default function App() {
       if (modalMode==="add") {
         const body={...formData}; delete body.id; delete body.tanggalDisplay;
         if (supabase.userId) body.created_by=supabase.userId;
+        body.user_email = localStorage.getItem("sb_email")||"";
         await supabase.insert("kegiatan",body);
         showNotif("Kegiatan berhasil ditambahkan!");
       } else {
@@ -398,46 +403,46 @@ export default function App() {
   const canEdit=user.role==="admin"||user.role==="protokoler";
 
   return (
-    <div style={{ display:"flex", height:"100vh", fontFamily:"'Segoe UI',system-ui,sans-serif", background:"#F3F4F6", overflow:"hidden" }}>
+    <div style={{ display:"flex", height:"100vh", fontFamily:"'Segoe UI',system-ui,sans-serif", background:"#F0FDFA", overflow:"hidden" }}>
       {notification&&(
-        <div style={{ position:"fixed", top:16, right:16, padding:"11px 16px", borderRadius:8, border:"1px solid", fontSize:13, fontWeight:600, zIndex:9999, boxShadow:"0 4px 16px rgba(0,0,0,0.12)", background:notification.type==="error"?"#FEF2F2":"#ECFDF5", borderColor:notification.type==="error"?"#FECACA":"#A7F3D0", color:notification.type==="error"?"#991B1B":"#065F46" }}>
+        <div style={{ position:"fixed", top:16, right:16, padding:"11px 16px", borderRadius:8, border:"1px solid", fontSize:13, fontWeight:600, zIndex:9999, boxShadow:"0 4px 16px rgba(0,0,0,0.12)", background:notification.type==="error"?"#FEF2F2":"#F0FDFA", borderColor:notification.type==="error"?"#FECACA":"#99F6E4", color:notification.type==="error"?"#991B1B":"#0F766E" }}>
           {notification.msg}
         </div>
       )}
 
       {/* SIDEBAR */}
-      <aside style={{ width:230, minWidth:230, background:"#1E3A5F", display:"flex", flexDirection:"column", position:"fixed", top:0, left:0, height:"100vh", zIndex:50 }}>
-        <div style={{ padding:"18px 16px 14px", borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
+      <aside style={{ width:230, minWidth:230, background:"#134E4A", display:"flex", flexDirection:"column", position:"fixed", top:0, left:0, height:"100vh", zIndex:50 }}>
+        <div style={{ padding:"18px 16px 14px", borderBottom:"1px solid rgba(255,255,255,0.25)" }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <LogoProtokol size={38}/>
             <div>
-              <div style={{ fontSize:9, fontWeight:800, color:"white", letterSpacing:0.5, lineHeight:1.3 }}>SISTEM INFORMASI DAN DOKUMENTASI</div><div style={{ fontSize:9, fontWeight:800, color:"white", letterSpacing:0.5, lineHeight:1.3 }}>AGENDA PIMPINAN</div>
+              <div style={{ fontSize:9, fontWeight:800, color:"white", letterSpacing:0.5, lineHeight:1.3, textShadow:"0 1px 2px rgba(0,0,0,0.2)" }}>SISTEM INFORMASI DAN DOKUMENTASI</div><div style={{ fontSize:9, fontWeight:800, color:"white", letterSpacing:0.5, lineHeight:1.3 }}>AGENDA PIMPINAN</div>
               <div style={{ fontSize:10, color:"rgba(255,255,255,0.45)", marginTop:1, lineHeight:1.3 }}>{user.dinas||"Manajemen Kegiatan"}</div>
             </div>
           </div>
         </div>
         <nav style={{ padding:"10px 8px", flex:1 }}>
           {[{id:"dashboard",label:"Dashboard"},{id:"kegiatan",label:"Jadwal Kegiatan"},...(isAdmin?[{id:"pengguna",label:"Manajemen Pengguna"}]:[])].map(item=>(
-            <button key={item.id} onClick={()=>setActiveMenu(item.id)} style={{ display:"flex", alignItems:"center", padding:"10px 14px", borderRadius:7, border:"none", background:activeMenu===item.id?"rgba(255,255,255,0.11)":"transparent", color:activeMenu===item.id?"white":"rgba(255,255,255,0.55)", cursor:"pointer", width:"100%", textAlign:"left", fontSize:13, fontWeight:activeMenu===item.id?600:400, marginBottom:2 }}>
+            <button key={item.id} onClick={()=>setActiveMenu(item.id)} style={{ display:"flex", alignItems:"center", padding:"10px 14px", borderRadius:7, border:"none", background:activeMenu===item.id?"rgba(255,255,255,0.20)":"transparent", color:activeMenu===item.id?"white":"rgba(255,255,255,0.80)", cursor:"pointer", width:"100%", textAlign:"left", fontSize:13, fontWeight:activeMenu===item.id?600:400, marginBottom:2 }}>
               {item.label}
             </button>
           ))}
         </nav>
-        <div style={{ padding:"12px 12px 16px", borderTop:"1px solid rgba(255,255,255,0.07)" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:10, padding:"9px 11px", background:"rgba(255,255,255,0.06)", borderRadius:7 }}>
-            <div style={{ width:30,height:30,borderRadius:"50%",background:"#0EA5E9",color:"white",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:12,flexShrink:0 }}>{(user.name||"U")[0].toUpperCase()}</div>
+        <div style={{ padding:"12px 12px 16px", borderTop:"1px solid rgba(255,255,255,0.25)" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:10, padding:"9px 11px", background:"rgba(255,255,255,0.15)", borderRadius:7 }}>
+            <div style={{ width:30,height:30,borderRadius:"50%",background:"#0F766E",color:"white",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:12,flexShrink:0 }}>{(user.name||"U")[0].toUpperCase()}</div>
             <div style={{ flex:1,minWidth:0 }}>
               <div style={{ fontSize:11,fontWeight:600,color:"white",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{user.name}</div>
               <span style={{ fontSize:10,fontWeight:600,padding:"1px 6px",borderRadius:5,background:ROLE_CONFIG[user.role]?.bg,color:ROLE_CONFIG[user.role]?.color }}>{ROLE_CONFIG[user.role]?.label||user.role}</span>
             </div>
           </div>
-          <button onClick={handleLogout} style={{ display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"7px 12px",border:"1px solid rgba(255,255,255,0.12)",borderRadius:7,background:"transparent",color:"rgba(255,255,255,0.55)",cursor:"pointer",fontSize:12,width:"100%" }}>Keluar</button>
+          <button onClick={handleLogout} style={{ display:"flex",alignItems:"center",justifyContent:"center",gap:6,padding:"7px 12px",border:"1px solid rgba(255,255,255,0.35)",borderRadius:7,background:"rgba(255,255,255,0.12)",color:"white",cursor:"pointer",fontSize:12,width:"100%" }}>Keluar</button>
         </div>
       </aside>
 
       {/* MAIN */}
       <main style={{ flex:1, display:"flex", flexDirection:"column", marginLeft:230, height:"100vh", overflow:"hidden" }}>
-        <header style={{ padding:"11px 22px", background:"white", borderBottom:"1px solid #E5E7EB", display:"flex", alignItems:"center", gap:16 }}>
+        <header style={{ padding:"11px 22px", background:"white", borderBottom:"2px solid #99F6E4", display:"flex", alignItems:"center", gap:16 }}>
           <div style={{ fontWeight:600,fontSize:14,color:"#111827",flex:1 }}>
             {activeMenu==="dashboard"&&"Dashboard"}
             {activeMenu==="kegiatan"&&"Jadwal Kegiatan"}
@@ -446,7 +451,7 @@ export default function App() {
           <div style={{ fontSize:12,color:"#9CA3AF" }}>{new Date().toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
         </header>
 
-        <div style={{ flex:1, overflowY:"auto", padding:"18px 22px", background:"#F3F4F6" }}>
+        <div style={{ flex:1, overflowY:"auto", padding:"18px 22px", background:"#F0FDFA" }}>
 
           {/* DASHBOARD */}
           {activeMenu==="dashboard"&&(
@@ -456,7 +461,7 @@ export default function App() {
                 <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>{user.dinas||"Sistem Informasi dan Dokumentasi Agenda Pimpinan"}</p>
               </div>
               <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(145px,1fr))",gap:10,marginBottom:18 }}>
-                {[{label:"Total Kegiatan",val:stats.total,color:"#4F46E5",bg:"#EEF2FF",border:"#C7D2FE"},{label:"Hari Ini",val:stats.hariIni,color:"#0284C7",bg:"#F0F9FF",border:"#BAE6FD"},{label:"Akan Berlangsung",val:stats.akan,color:"#2563EB",bg:"#EFF6FF",border:"#BFDBFE"},{label:"Sedang Berlangsung",val:stats.sedang,color:"#D97706",bg:"#FFFBEB",border:"#FDE68A"},{label:"Selesai",val:stats.selesai,color:"#059669",bg:"#ECFDF5",border:"#A7F3D0"},{label:"Dibatalkan",val:stats.batal,color:"#DC2626",bg:"#FEF2F2",border:"#FECACA"}].map(c=>(
+                {[{label:"Total Kegiatan",val:stats.total,color:"#4F46E5",bg:"#EEF2FF",border:"#99F6E4"},{label:"Hari Ini",val:stats.hariIni,color:"#134E4A",bg:"#F0F9FF",border:"#99F6E4"},{label:"Akan Berlangsung",val:stats.akan,color:"#2563EB",bg:"#EFF6FF",border:"#BFDBFE"},{label:"Sedang Berlangsung",val:stats.sedang,color:"#0F766E",bg:"#F0FDFA",border:"#99F6E4"},{label:"Selesai",val:stats.selesai,color:"#059669",bg:"#ECFDF5",border:"#A7F3D0"},{label:"Dibatalkan",val:stats.batal,color:"#DC2626",bg:"#FEF2F2",border:"#FECACA"}].map(c=>(
                   <div key={c.label} style={{ background:c.bg,borderRadius:10,padding:"13px 15px",border:`1px solid ${c.border}` }}>
                     <div style={{ fontSize:24,fontWeight:800,color:c.color,lineHeight:1 }}>{c.val}</div>
                     <div style={{ fontSize:11,color:c.color,marginTop:4,fontWeight:500,opacity:0.75 }}>{c.label}</div>
@@ -466,12 +471,12 @@ export default function App() {
               <div style={{ background:"white",borderRadius:12,padding:18,border:"1px solid #E5E7EB" }}>
                 <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14 }}>
                   <h2 style={{ fontSize:14,fontWeight:700,color:"#111827",margin:0 }}>Kegiatan Mendatang</h2>
-                  <button onClick={()=>setActiveMenu("kegiatan")} style={{ background:"none",border:"none",color:"#0EA5E9",cursor:"pointer",fontWeight:600,fontSize:12 }}>Lihat Semua</button>
+                  <button onClick={()=>setActiveMenu("kegiatan")} style={{ background:"none",border:"none",color:"#134E4A",cursor:"pointer",fontWeight:600,fontSize:12 }}>Lihat Semua</button>
                 </div>
                 {upcoming.length===0?(
                   <div style={{ textAlign:"center",padding:"24px 0",color:"#9CA3AF",fontSize:13 }}>
                     Belum ada kegiatan mendatang.
-                    {canEdit&&<div style={{marginTop:10}}><button onClick={()=>setActiveMenu("kegiatan")} style={{padding:"8px 16px",background:"#1E3A5F",color:"white",border:"none",borderRadius:7,fontSize:12,fontWeight:600,cursor:"pointer"}}>Tambah Kegiatan</button></div>}
+                    {canEdit&&<div style={{marginTop:10}}><button onClick={()=>setActiveMenu("kegiatan")} style={{padding:"8px 16px",background:"#134E4A",color:"white",border:"none",borderRadius:7,fontSize:12,fontWeight:600,cursor:"pointer"}}>Tambah Kegiatan</button></div>}
                   </div>
                 ):upcoming.map(k=>(
                   <div key={k.id} onClick={()=>{setSelectedKegiatan(k);setModalMode("view");setShowModal(true);}} style={{ display:"flex",alignItems:"center",gap:12,padding:"9px 11px",borderRadius:8,background:"#F9FAFB",cursor:"pointer",marginBottom:7,border:"1px solid #E5E7EB" }}>
@@ -499,7 +504,7 @@ export default function App() {
                   <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>Total {kegiatanList.length} kegiatan terdaftar</p>
                 </div>
                 {canEdit&&(
-                  <button onClick={()=>{setSelectedKegiatan(null);setModalMode("add");setShowModal(true);}} style={{ padding:"9px 16px",background:"#1E3A5F",color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer" }}>
+                  <button onClick={()=>{setSelectedKegiatan(null);setModalMode("add");setShowModal(true);}} style={{ padding:"9px 16px",background:"#134E4A",color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer" }}>
                     + Tambah Kegiatan
                   </button>
                 )}
@@ -518,7 +523,7 @@ export default function App() {
               {filtered.length===0?(
                 <div style={{ textAlign:"center",padding:"36px 0",color:"#9CA3AF",background:"white",borderRadius:12,border:"1px solid #E5E7EB",fontSize:13 }}>
                   Belum ada kegiatan
-                  {canEdit&&<div style={{marginTop:10}}><button onClick={()=>{setSelectedKegiatan(null);setModalMode("add");setShowModal(true);}} style={{padding:"8px 16px",background:"#1E3A5F",color:"white",border:"none",borderRadius:7,fontSize:12,fontWeight:600,cursor:"pointer"}}>+ Tambah Kegiatan Pertama</button></div>}
+                  {canEdit&&<div style={{marginTop:10}}><button onClick={()=>{setSelectedKegiatan(null);setModalMode("add");setShowModal(true);}} style={{padding:"8px 16px",background:"#134E4A",color:"white",border:"none",borderRadius:7,fontSize:12,fontWeight:600,cursor:"pointer"}}>+ Tambah Kegiatan Pertama</button></div>}
                 </div>
               ):(
                 <div style={{ background:"white",borderRadius:12,overflow:"auto",border:"1px solid #E5E7EB" }}>
@@ -533,7 +538,7 @@ export default function App() {
                         <tr key={k.id} style={{ background:i%2===0?"#FAFAFA":"white" }}>
                           <td style={{ padding:"10px 13px",borderBottom:"1px solid #F3F4F6",verticalAlign:"middle",whiteSpace:"nowrap",fontSize:13,fontWeight:600,color:"#111827" }}>{formatTanggal(k.tanggal)}</td>
                           <td style={{ padding:"10px 13px",borderBottom:"1px solid #F3F4F6",verticalAlign:"middle",fontSize:12,color:"#6B7280",whiteSpace:"nowrap" }}>{formatWaktu(k.waktu_mulai)}{k.waktu_selesai&&` – ${formatWaktu(k.waktu_selesai)}`}</td>
-                          <td style={{ padding:"10px 13px",borderBottom:"1px solid #F3F4F6",verticalAlign:"middle" }}><span style={{ padding:"2px 8px",borderRadius:5,fontSize:11,fontWeight:600,background:"#EFF6FF",color:"#1D4ED8" }}>{k.jenis_kegiatan?.charAt(0).toUpperCase()+k.jenis_kegiatan?.slice(1)}</span></td>
+                          <td style={{ padding:"10px 13px",borderBottom:"1px solid #F3F4F6",verticalAlign:"middle" }}><span style={{ padding:"2px 8px",borderRadius:5,fontSize:11,fontWeight:600,background:"#CCFBF1",color:"#1D4ED8" }}>{k.jenis_kegiatan?.charAt(0).toUpperCase()+k.jenis_kegiatan?.slice(1)}</span></td>
                           <td style={{ padding:"10px 13px",borderBottom:"1px solid #F3F4F6",verticalAlign:"middle",maxWidth:180 }}>
                             <div style={{ fontWeight:600,color:"#111827",fontSize:13 }}>{k.nama_kegiatan}</div>
                             {k.peserta_undangan&&<div style={{ color:"#6B7280",fontSize:11,marginTop:1 }}>{k.peserta_undangan}</div>}
@@ -543,8 +548,8 @@ export default function App() {
                           <td style={{ padding:"10px 13px",borderBottom:"1px solid #F3F4F6",verticalAlign:"middle" }}><StatusBadge status={k.status}/></td>
                           <td style={{ padding:"10px 13px",borderBottom:"1px solid #F3F4F6",verticalAlign:"middle" }}>
                             <div style={{ display:"flex",gap:4 }}>
-                              <button onClick={()=>{setSelectedKegiatan(k);setModalMode("view");setShowModal(true);}} style={{ padding:"4px 9px",borderRadius:5,border:"none",background:"#F3F4F6",cursor:"pointer",fontSize:11,fontWeight:600,color:"#374151" }}>Lihat</button>
-                              {canEdit&&<button onClick={()=>{setSelectedKegiatan(k);setModalMode("edit");setShowModal(true);}} style={{ padding:"4px 9px",borderRadius:5,border:"none",background:"#EFF6FF",cursor:"pointer",fontSize:11,fontWeight:600,color:"#1D4ED8" }}>Edit</button>}
+                              <button onClick={()=>{setSelectedKegiatan(k);setModalMode("view");setShowModal(true);}} style={{ padding:"4px 9px",borderRadius:5,border:"none",background:"#F0FDFA",cursor:"pointer",fontSize:11,fontWeight:600,color:"#374151" }}>Lihat</button>
+                              {canEdit&&<button onClick={()=>{setSelectedKegiatan(k);setModalMode("edit");setShowModal(true);}} style={{ padding:"4px 9px",borderRadius:5,border:"none",background:"#CCFBF1",cursor:"pointer",fontSize:11,fontWeight:600,color:"#1D4ED8" }}>Edit</button>}
                               {isKreatif&&<button onClick={()=>{setSelectedKegiatan(k);setModalMode("edit");setShowModal(true);}} style={{ padding:"4px 9px",borderRadius:5,border:"none",background:"#ECFDF5",cursor:"pointer",fontSize:11,fontWeight:600,color:"#065F46" }}>Link</button>}
                               {isAdmin&&<button onClick={()=>{setDeleteTarget(k);setShowDeleteConfirm(true);}} style={{ padding:"4px 9px",borderRadius:5,border:"none",background:"#FEF2F2",cursor:"pointer",fontSize:11,fontWeight:600,color:"#DC2626" }}>Hapus</button>}
                             </div>
@@ -568,7 +573,7 @@ export default function App() {
               <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12,marginBottom:18 }}>
                 {AKUN_DIIZINKAN.map(a=>(
                   <div key={a.email} style={{ background:"white",borderRadius:12,padding:16,display:"flex",alignItems:"center",gap:12,border:"1px solid #E5E7EB" }}>
-                    <div style={{ width:42,height:42,borderRadius:"50%",background:"#1E3A5F",color:"white",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:16,flexShrink:0 }}>{a.nama[0]}</div>
+                    <div style={{ width:42,height:42,borderRadius:"50%",background:"#134E4A",color:"white",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:16,flexShrink:0 }}>{a.nama[0]}</div>
                     <div style={{ flex:1,minWidth:0 }}>
                       <div style={{ fontWeight:600,fontSize:13,color:"#111827",marginBottom:2 }}>{a.nama}</div>
                       <div style={{ fontSize:11,color:"#6B7280",marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{a.email}</div>
@@ -578,8 +583,8 @@ export default function App() {
                   </div>
                 ))}
               </div>
-              <div style={{ background:"#F0F9FF",border:"1px solid #BAE6FD",borderRadius:12,padding:"14px 16px",marginBottom:14 }}>
-                <h3 style={{ margin:"0 0 10px",fontSize:13,color:"#0369A1",fontWeight:700 }}>Ringkasan Hak Akses</h3>
+              <div style={{ background:"#F0FDFA",border:"1px solid #99F6E4",borderRadius:12,padding:"14px 16px",marginBottom:14 }}>
+                <h3 style={{ margin:"0 0 10px",fontSize:13,color:"#134E4A",fontWeight:700 }}>Ringkasan Hak Akses</h3>
                 <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:10 }}>
                   {[["admin","Akses penuh: tambah, edit, hapus kegiatan & kelola pengguna"],["tim_kreatif","Akses terbatas: hanya bisa lihat kegiatan & upload link dokumentasi"]].map(([role,desc])=>(
                     <div key={role} style={{ background:"white",borderRadius:8,padding:"10px 12px",borderLeft:`3px solid ${ROLE_CONFIG[role].color}` }}>
@@ -673,7 +678,7 @@ function KegiatanModal({ mode, data, user, isKreatif, canEdit, onSave, onUpdateL
           <h2 style={{ fontSize:15,fontWeight:700,color:"#111827",margin:0 }}>
             {isView?"Detail Kegiatan":mode==="edit"?(onlyLink?"Upload Link Dokumentasi":"Edit Kegiatan"):"Tambah Kegiatan Baru"}
           </h2>
-          <button onClick={onClose} style={{ background:"#F3F4F6",border:"none",borderRadius:6,padding:"5px 10px",cursor:"pointer",fontSize:13,color:"#6B7280" }}>✕</button>
+          <button onClick={onClose} style={{ background:"#F0FDFA",border:"none",borderRadius:6,padding:"5px 10px",cursor:"pointer",fontSize:13,color:"#6B7280" }}>✕</button>
         </div>
 
         <div style={{ padding:"16px 20px",overflowY:"auto",flex:1 }}>
@@ -697,7 +702,7 @@ function KegiatanModal({ mode, data, user, isKreatif, canEdit, onSave, onUpdateL
             </div>
           ):onlyLink?(
             <div>
-              <div style={{ padding:"11px 14px",background:"#F0F9FF",borderRadius:8,marginBottom:14,border:"1px solid #BAE6FD" }}>
+              <div style={{ padding:"11px 14px",background:"#F0FDFA",borderRadius:8,marginBottom:14,border:"1px solid #99F6E4" }}>
                 <div style={{ fontWeight:600,fontSize:13,color:"#111827" }}>{data?.nama_kegiatan}</div>
                 <div style={{ fontSize:12,color:"#6B7280",marginTop:2 }}>{formatTanggal(data?.tanggal)}</div>
               </div>
@@ -768,7 +773,7 @@ function KegiatanModal({ mode, data, user, isKreatif, canEdit, onSave, onUpdateL
                   Tambah ke Google Calendar
                 </a>
               )}
-              <button onClick={()=>onlyLink?onUpdateLink(form.id,form.link_dokumentasi):onSave(form)} style={{ padding:"8px 18px",background:"#1E3A5F",color:"white",border:"none",borderRadius:7,fontSize:13,fontWeight:600,cursor:"pointer" }}>
+              <button onClick={()=>onlyLink?onUpdateLink(form.id,form.link_dokumentasi):onSave(form)} style={{ padding:"8px 18px",background:"#134E4A",color:"white",border:"none",borderRadius:7,fontSize:13,fontWeight:600,cursor:"pointer" }}>
                 {onlyLink?"Simpan Link":mode==="edit"?"Simpan Perubahan":"Tambah Kegiatan"}
               </button>
             </>
