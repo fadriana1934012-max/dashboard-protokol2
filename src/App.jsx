@@ -4,8 +4,8 @@ const SUPABASE_URL = "https://hrqppgcjzhqdnuhhvxvi.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_vKvRdKlYGvsKCKNGpgvzYA_pPrtTpb6";
 
 const AKUN_DIIZINKAN = [
-  { email: "protokoldata@gmail.com", password: "DinasPariwisata*", role: "admin", nama: "Admin Protokol", dinas: "Dinas Pariwisata Sultra" },
-  { email: "pemasarandisparsultra@gmail.com", password: "penasaran1234", role: "tim_kreatif", nama: "Tim Kreatif Pemasaran", dinas: "Dinas Pariwisata Sultra" },
+  { email: "protokoldata@gmail.com", password: "DinasPariwisata*", role: "admin", nama: "Admin Protokol", dinas: "Dinas Pariwisata Sulawesi Tenggara" },
+  { email: "pemasarandisparsultra@gmail.com", password: "penasaran1234", role: "tim_kreatif", nama: "Tim Kreatif Pemasaran", dinas: "Dinas Pariwisata Sulawesi Tenggara" },
 ];
 
 const supabase = {
@@ -274,9 +274,15 @@ export default function App() {
 
   async function loadData() {
     const emailKey = localStorage.getItem("sb_email")||"";
-    const params = emailKey
-      ? `?select=*&order=tanggal.asc,waktu_mulai.asc&user_email=eq.${encodeURIComponent(emailKey)}`
-      : "?select=*&order=tanggal.asc,waktu_mulai.asc";
+    const isAkunUtama = AKUN_DIIZINKAN.find(a=>a.email===emailKey);
+    let params;
+    if (isAkunUtama) {
+      // Akun utama (protokoldata & pemasarandisparsultra): lihat data bersama
+      params = "?select=*&order=tanggal.asc,waktu_mulai.asc";
+    } else {
+      // Akun daftar baru: hanya lihat data milik sendiri
+      params = `?select=*&user_email=eq.${encodeURIComponent(emailKey)}&order=tanggal.asc,waktu_mulai.asc`;
+    }
     const data = await supabase.query("kegiatan", params);
     if (Array.isArray(data)) setKegiatanList(data);
   }
@@ -422,7 +428,7 @@ export default function App() {
           </div>
         </div>
         <nav style={{ padding:"10px 8px", flex:1 }}>
-          {[{id:"dashboard",label:"Dashboard"},{id:"kegiatan",label:"Jadwal Kegiatan"},...(isAdmin?[{id:"pengguna",label:"Manajemen Pengguna"}]:[])].map(item=>(
+          {[{id:"dashboard",label:"Dashboard"},{id:"kegiatan",label:"Jadwal Kegiatan"},{id:"laporan",label:"Laporan"},...(isAdmin?[{id:"pengguna",label:"Manajemen Pengguna"}]:[])].map(item=>(
             <button key={item.id} onClick={()=>setActiveMenu(item.id)} style={{ display:"flex", alignItems:"center", padding:"10px 14px", borderRadius:7, border:"none", background:activeMenu===item.id?"rgba(255,255,255,0.20)":"transparent", color:activeMenu===item.id?"white":"rgba(255,255,255,0.80)", cursor:"pointer", width:"100%", textAlign:"left", fontSize:13, fontWeight:activeMenu===item.id?600:400, marginBottom:2 }}>
               {item.label}
             </button>
@@ -447,6 +453,7 @@ export default function App() {
             {activeMenu==="dashboard"&&"Dashboard"}
             {activeMenu==="kegiatan"&&"Jadwal Kegiatan"}
             {activeMenu==="pengguna"&&"Manajemen Pengguna"}
+            {activeMenu==="laporan"&&"Laporan Kegiatan"}
           </div>
           <div style={{ fontSize:12,color:"#9CA3AF" }}>{new Date().toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
         </header>
@@ -601,6 +608,68 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {/* LAPORAN */}
+          {activeMenu==="laporan"&&(
+            <div>
+              <div style={{ marginBottom:16 }}>
+                <h1 style={{ fontSize:18,fontWeight:700,color:"#111827",margin:0 }}>Laporan Kegiatan</h1>
+                <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>Rekap seluruh kegiatan — bisa dicetak</p>
+              </div>
+              <div style={{ display:"flex",gap:10,marginBottom:14,flexWrap:"wrap" }}>
+                <select onChange={e=>setFilterStatus(e.target.value)} style={{ padding:"8px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,background:"white",cursor:"pointer",outline:"none" }}>
+                  <option value="semua">Semua Status</option>
+                  {Object.entries(STATUS_CONFIG).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                </select>
+                <select onChange={e=>setFilterJenis(e.target.value)} style={{ padding:"8px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,background:"white",cursor:"pointer",outline:"none" }}>
+                  <option value="semua">Semua Jenis</option>
+                  {JENIS_OPTIONS.map(j=><option key={j} value={j}>{j.charAt(0).toUpperCase()+j.slice(1)}</option>)}
+                </select>
+                <button onClick={()=>window.print()} style={{ marginLeft:"auto",padding:"8px 18px",background:"#134E4A",color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer" }}>Cetak Laporan</button>
+              </div>
+              <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:10,marginBottom:16 }}>
+                {[{label:"Total",val:kegiatanList.length,color:"#4F46E5"},{label:"Akan Berlangsung",val:kegiatanList.filter(k=>k.status==="akan_berlangsung").length,color:"#2563EB"},{label:"Sedang",val:kegiatanList.filter(k=>k.status==="sedang_berlangsung").length,color:"#0F766E"},{label:"Selesai",val:kegiatanList.filter(k=>k.status==="selesai").length,color:"#059669"},{label:"Dibatalkan",val:kegiatanList.filter(k=>k.status==="dibatalkan").length,color:"#DC2626"}].map(c=>(
+                  <div key={c.label} style={{ background:"white",borderRadius:10,padding:"12px 14px",border:"1px solid #E5E7EB",textAlign:"center" }}>
+                    <div style={{ fontSize:22,fontWeight:800,color:c.color }}>{c.val}</div>
+                    <div style={{ fontSize:11,color:"#6B7280",marginTop:2 }}>{c.label}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background:"white",borderRadius:12,overflow:"auto",border:"1px solid #E5E7EB" }}>
+                <table style={{ width:"100%",borderCollapse:"collapse",minWidth:800,fontSize:13 }}>
+                  <thead>
+                    <tr style={{ background:"#134E4A" }}>
+                      {["No","Tanggal","Waktu","Jenis","Nama Kegiatan","Lokasi","Peserta","PIC","Status","Dok"].map(h=>(
+                        <th key={h} style={{ padding:"10px 12px",textAlign:"left",fontSize:11,fontWeight:700,color:"white",whiteSpace:"nowrap" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.length===0?(<tr><td colSpan={10} style={{ padding:"32px",textAlign:"center",color:"#9CA3AF" }}>Tidak ada data</td></tr>):filtered.map((k,i)=>(
+                      <tr key={k.id} style={{ background:i%2===0?"#F9FAFB":"white",borderBottom:"1px solid #F3F4F6" }}>
+                        <td style={{ padding:"9px 12px",color:"#6B7280",fontSize:12,textAlign:"center" }}>{i+1}</td>
+                        <td style={{ padding:"9px 12px",fontWeight:600,color:"#111827",whiteSpace:"nowrap" }}>{formatTanggal(k.tanggal)}</td>
+                        <td style={{ padding:"9px 12px",color:"#6B7280",whiteSpace:"nowrap" }}>{formatWaktu(k.waktu_mulai)}{k.waktu_selesai&&` – ${formatWaktu(k.waktu_selesai)}`}</td>
+                        <td style={{ padding:"9px 12px" }}><span style={{ padding:"2px 7px",borderRadius:4,fontSize:11,fontWeight:600,background:"#EFF6FF",color:"#1D4ED8" }}>{k.jenis_kegiatan?.charAt(0).toUpperCase()+k.jenis_kegiatan?.slice(1)}</span></td>
+                        <td style={{ padding:"9px 12px",fontWeight:500,color:"#111827",maxWidth:160 }}>{k.nama_kegiatan}</td>
+                        <td style={{ padding:"9px 12px",color:"#374151",maxWidth:130 }}>{k.lokasi||"-"}</td>
+                        <td style={{ padding:"9px 12px",color:"#374151",maxWidth:130 }}>{k.peserta_undangan||"-"}</td>
+                        <td style={{ padding:"9px 12px",color:"#374151" }}>{k.pic||"-"}</td>
+                        <td style={{ padding:"9px 12px" }}><StatusBadge status={k.status}/></td>
+                        <td style={{ padding:"9px 12px" }}>{k.link_dokumentasi?(<a href={k.link_dokumentasi} target="_blank" rel="noopener noreferrer" style={{ color:"#059669",fontSize:12,fontWeight:600,textDecoration:"none" }}>Lihat</a>):<span style={{ color:"#D1D5DB" }}>-</span>}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ background:"#F0FDFA",borderTop:"2px solid #99F6E4" }}>
+                      <td colSpan={10} style={{ padding:"10px 14px",fontSize:11,color:"#6B7280" }}>Total {filtered.length} kegiatan · Dicetak: {new Date().toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"})} · {user.dinas}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          )}
+
         </div>
       </main>
 
