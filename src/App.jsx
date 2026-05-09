@@ -176,8 +176,7 @@ function AuthPage({ onLogin, onRegister, notification }) {
       <div style={{ background:"white", borderRadius:16, padding:"32px 28px", width:"100%", maxWidth:420, boxShadow:"0 20px 60px rgba(0,0,0,0.3)" }}>
         <div style={{ textAlign:"center", marginBottom:22 }}>
           <div style={{ display:"flex", justifyContent:"center", marginBottom:10 }}><LogoProtokol size={48}/></div>
-          <div style={{ fontSize:18, fontWeight:800, color:"#1E3A5F", letterSpacing:0.5 }}>SISTEM PROTOKOLER</div>
-          <div style={{ fontSize:12, color:"#9CA3AF", marginTop:3 }}>Dashboard Manajemen Kegiatan</div>
+          <div style={{ fontSize:15, fontWeight:800, color:"#1E3A5F", letterSpacing:0.3, lineHeight:1.4 }}>SISTEM INFORMASI DAN DOKUMENTASI</div><div style={{ fontSize:15, fontWeight:800, color:"#1E3A5F", letterSpacing:0.3, lineHeight:1.4, marginBottom:3 }}>AGENDA PIMPINAN</div><div style={{ fontSize:12, color:"#6B7280", marginTop:3 }}>Dinas Pariwisata Sulawesi Tenggara</div>
         </div>
 
         <div style={{ display:"flex", borderBottom:"1px solid #E5E7EB", marginBottom:20 }}>
@@ -274,7 +273,12 @@ export default function App() {
   }
 
   async function loadData() {
-    const data = await supabase.query("kegiatan","?select=*&order=tanggal.asc,waktu_mulai.asc");
+    const emailKey = localStorage.getItem("sb_email")||"";
+    // Filter data berdasarkan email user - setiap akun hanya lihat datanya sendiri
+    const params = emailKey
+      ? `?select=*&order=tanggal.asc,waktu_mulai.asc&user_email=eq.${encodeURIComponent(emailKey)}`
+      : "?select=*&order=tanggal.asc,waktu_mulai.asc";
+    const data = await supabase.query("kegiatan", params);
     if (Array.isArray(data)) setKegiatanList(data);
   }
 
@@ -337,6 +341,8 @@ export default function App() {
   }
 
   async function handleSaveKegiatan(formData) {
+    // Tambahkan user_email untuk isolasi data per akun
+    formData.user_email = user.email;
     try {
       if (modalMode==="add") {
         const body={...formData}; delete body.id; delete body.tanggalDisplay;
@@ -398,7 +404,7 @@ export default function App() {
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <LogoProtokol size={38}/>
             <div>
-              <div style={{ fontSize:12, fontWeight:800, color:"white", letterSpacing:0.8, lineHeight:1.3 }}>PROTOKOLER</div>
+              <div style={{ fontSize:9, fontWeight:800, color:"white", letterSpacing:0.5, lineHeight:1.3 }}>SISTEM INFORMASI DAN DOKUMENTASI</div><div style={{ fontSize:9, fontWeight:800, color:"white", letterSpacing:0.5, lineHeight:1.3 }}>AGENDA PIMPINAN</div>
               <div style={{ fontSize:10, color:"rgba(255,255,255,0.45)", marginTop:1, lineHeight:1.3 }}>{user.dinas||"Manajemen Kegiatan"}</div>
             </div>
           </div>
@@ -440,7 +446,7 @@ export default function App() {
             <div>
               <div style={{ marginBottom:18 }}>
                 <h1 style={{ fontSize:18,fontWeight:700,color:"#111827",margin:0 }}>Selamat Datang, {user.name}</h1>
-                <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>{user.dinas||"Sistem Manajemen Kegiatan Protokoler"}</p>
+                <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>{user.dinas||"Sistem Informasi dan Dokumentasi Agenda Pimpinan"}</p>
               </div>
               <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(145px,1fr))",gap:10,marginBottom:18 }}>
                 {[{label:"Total Kegiatan",val:stats.total,color:"#4F46E5",bg:"#EEF2FF",border:"#C7D2FE"},{label:"Hari Ini",val:stats.hariIni,color:"#0284C7",bg:"#F0F9FF",border:"#BAE6FD"},{label:"Akan Berlangsung",val:stats.akan,color:"#2563EB",bg:"#EFF6FF",border:"#BFDBFE"},{label:"Sedang Berlangsung",val:stats.sedang,color:"#D97706",bg:"#FFFBEB",border:"#FDE68A"},{label:"Selesai",val:stats.selesai,color:"#059669",bg:"#ECFDF5",border:"#A7F3D0"},{label:"Dibatalkan",val:stats.batal,color:"#DC2626",bg:"#FEF2F2",border:"#FECACA"}].map(c=>(
@@ -640,7 +646,15 @@ function KegiatanModal({ mode, data, user, isKreatif, canEdit, onSave, onUpdateL
     return (
       <div style={{ marginBottom:13 }}>
         <label style={{ display:"block",fontSize:12,fontWeight:600,color:"#374151",marginBottom:5 }}>{label}</label>
-        <input type={type} value={form[field]||""} onChange={e=>setForm(p=>({...p,[field]:e.target.value}))} placeholder={placeholder} readOnly={isView} style={{ width:"100%",padding:"9px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box",background:isView?"#F9FAFB":"white",color:"#111827" }}/>
+        <input
+          type={type}
+          defaultValue={form[field]||""}
+          onBlur={e=>setForm(p=>({...p,[field]:e.target.value}))}
+          onChange={e=>{ form[field]=e.target.value; }}
+          placeholder={placeholder}
+          readOnly={isView}
+          style={{ width:"100%",padding:"9px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box",background:isView?"#F9FAFB":"white",color:"#111827" }}
+        />
       </div>
     );
   }
@@ -722,7 +736,13 @@ function KegiatanModal({ mode, data, user, isKreatif, canEdit, onSave, onUpdateL
               </div>
               <div style={{ marginBottom:13 }}>
                 <label style={{ display:"block",fontSize:12,fontWeight:600,color:"#374151",marginBottom:5 }}>Keterangan</label>
-                <textarea value={form.keterangan} onChange={e=>setForm(p=>({...p,keterangan:e.target.value}))} placeholder="Catatan atau keterangan tambahan..." style={{ width:"100%",padding:"9px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,outline:"none",minHeight:70,resize:"vertical",boxSizing:"border-box",fontFamily:"inherit" }}/>
+                <textarea
+                  defaultValue={form.keterangan}
+                  onBlur={e=>setForm(p=>({...p,keterangan:e.target.value}))}
+                  onChange={e=>{ form.keterangan=e.target.value; }}
+                  placeholder="Catatan atau keterangan tambahan..."
+                  style={{ width:"100%",padding:"9px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,outline:"none",minHeight:70,resize:"vertical",boxSizing:"border-box",fontFamily:"inherit" }}
+                />
               </div>
               <Field label="Diinput Oleh" field="diinput_oleh" placeholder="Nama penginput..."/>
               <Field label="Link Dokumentasi" field="link_dokumentasi" placeholder="https://drive.google.com/..."/>
