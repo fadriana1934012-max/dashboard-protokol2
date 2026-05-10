@@ -4,8 +4,8 @@ const SUPABASE_URL = "https://hrqppgcjzhqdnuhhvxvi.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_vKvRdKlYGvsKCKNGpgvzYA_pPrtTpb6";
 
 const AKUN_DIIZINKAN = [
-  { email: "protokoldata@gmail.com", password: "DinasPariwisata*", role: "admin", nama: "Admin Protokol", dinas: "Dinas Pariwisata Sulawesi Tenggara" },
-  { email: "pemasarandisparsultra@gmail.com", password: "penasaran1234", role: "tim_kreatif", nama: "Tim Kreatif Pemasaran", dinas: "Dinas Pariwisata Sulawesi Tenggara" },
+  { email: "protokoldata@gmail.com", password: "DinasPariwisata*", role: "admin", nama: "Admin Protokol", dinas: "Dinas Pariwisata Sultra" },
+  { email: "pemasarandisparsultra@gmail.com", password: "penasaran1234", role: "tim_kreatif", nama: "Tim Kreatif Pemasaran", dinas: "Dinas Pariwisata Sultra" },
 ];
 
 const supabase = {
@@ -150,95 +150,55 @@ const L = { display:"block", fontSize:12, fontWeight:600, color:"#374151", margi
 const I = { width:"100%", padding:"9px 12px", border:"1.5px solid #E5E7EB", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box", color:"#111827", background:"white" };
 const BtnPrimary = { width:"100%", padding:12, background:"#134E4A", color:"white", border:"none", borderRadius:8, fontSize:14, fontWeight:600, cursor:"pointer" };
 
-function AuthPage({ onLogin, onRegister, notification }) {
-  const [mode, setMode] = useState("login");
+function AuthPage({ onLogin, notification }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
-  const [nama, setNama] = useState("");
-  const [dinas, setDinas] = useState("");
-  const [konfirmPass, setKonfirmPass] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
     if (!email || !password) return;
     setLoading(true); await onLogin(email, password); setLoading(false);
   }
-  async function handleRegister() {
-    if (!email||!password||!nama||!dinas) { alert("Semua kolom wajib diisi!"); return; }
-    if (password!==konfirmPass) { alert("Password tidak sama!"); return; }
-    if (password.length<8) { alert("Password minimal 8 karakter!"); return; }
-    setLoading(true); await onRegister(email, password, nama, dinas); setLoading(false);
-  }
 
   return (
-    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:"linear-gradient(160deg,#134E4A,#134E4A)", padding:20 }}>
-      <div style={{ background:"white", borderRadius:16, padding:"32px 28px", width:"100%", maxWidth:420, boxShadow:"0 20px 60px rgba(0,0,0,0.3)" }}>
-        <div style={{ textAlign:"center", marginBottom:22 }}>
+    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", background:"linear-gradient(160deg,#0F2950,#1E3A5F)", padding:20 }}>
+      <div style={{ background:"white", borderRadius:16, padding:"32px 28px", width:"100%", maxWidth:400, boxShadow:"0 20px 60px rgba(0,0,0,0.3)" }}>
+        <div style={{ textAlign:"center", marginBottom:24 }}>
           <div style={{ display:"flex", justifyContent:"center", marginBottom:10 }}><LogoProtokol size={48}/></div>
-          <div style={{ fontSize:15, fontWeight:800, color:"#134E4A", letterSpacing:0.3, lineHeight:1.4 }}>SISTEM INFORMASI DAN DOKUMENTASI</div><div style={{ fontSize:15, fontWeight:800, color:"#134E4A", letterSpacing:0.3, lineHeight:1.4, marginBottom:3 }}>AGENDA PIMPINAN</div><div style={{ fontSize:12, color:"#6B7280", marginTop:3 }}>Dinas Pariwisata Sulawesi Tenggara</div>
-        </div>
-
-        <div style={{ display:"flex", borderBottom:"1px solid #E5E7EB", marginBottom:20 }}>
-          {[["login","Masuk"],["register","Daftar"]].map(([m,l])=>(
-            <button key={m} onClick={()=>setMode(m)} style={{ flex:1, padding:"8px 0", border:"none", background:"none", fontSize:13, fontWeight:mode===m?700:400, color:mode===m?"#0F766E":"#9CA3AF", borderBottom:mode===m?"2px solid #134E4A":"2px solid transparent", marginBottom:-1, cursor:"pointer" }}>{l}</button>
-          ))}
+          <div style={{ fontSize:18, fontWeight:800, color:"#1E3A5F", letterSpacing:0.5 }}>SISTEM PROTOKOLER</div>
+          <div style={{ fontSize:12, color:"#9CA3AF", marginTop:3 }}>Dinas Pariwisata Sulawesi Tenggara</div>
         </div>
 
         {notification && (
-          <div style={{ padding:"10px 13px", borderRadius:8, marginBottom:14, fontSize:13, background:notification.type==="error"?"#FEF2F2":"#F0FDFA", color:notification.type==="error"?"#991B1B":"#0F766E", border:`1px solid ${notification.type==="error"?"#FECACA":"#99F6E4"}` }}>
+          <div style={{ padding:"10px 13px", borderRadius:8, marginBottom:14, fontSize:13, background:notification.type==="error"?"#FEF2F2":"#ECFDF5", color:notification.type==="error"?"#991B1B":"#065F46", border:`1px solid ${notification.type==="error"?"#FECACA":"#A7F3D0"}` }}>
             {notification.msg}
           </div>
         )}
 
-        {mode==="login" ? (
-          <div>
-            <div style={{ marginBottom:14 }}>
-              <label style={L}>Email</label>
-              <input type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="email@instansi.go.id" style={I}/>
-            </div>
-            <div style={{ marginBottom:18 }}>
-              <label style={L}>Password</label>
-              <div style={{ position:"relative" }}>
-                <input type={showPass?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="Masukkan password" style={{...I,paddingRight:80}}/>
-                <button onClick={()=>setShowPass(!showPass)} style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", fontSize:11, fontWeight:600 }}>{showPass?"Sembunyikan":"Tampilkan"}</button>
-              </div>
-            </div>
-            <button onClick={handleLogin} disabled={loading} style={BtnPrimary}>{loading?"Memverifikasi...":"Masuk"}</button>
-            <div style={{ marginTop:12, padding:11, background:"#F0FDFA", borderRadius:8, fontSize:11, color:"#134E4A", border:"1px solid #99F6E4", lineHeight:1.5 }}>
-              Akses terbatas — hanya akun yang telah didaftarkan yang dapat masuk.
-            </div>
+        <div style={{ marginBottom:14 }}>
+          <label style={L}>Email</label>
+          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="email@instansi.go.id" style={I}/>
+        </div>
+        <div style={{ marginBottom:20 }}>
+          <label style={L}>Password</label>
+          <div style={{ position:"relative" }}>
+            <input type={showPass?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="Masukkan password" style={{...I,paddingRight:80}}/>
+            <button onClick={()=>setShowPass(!showPass)} style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", fontSize:11, fontWeight:600 }}>{showPass?"Sembunyikan":"Tampilkan"}</button>
           </div>
-        ) : (
-          <div>
-            {[["Nama Lengkap Anda",nama,setNama,"cth: Ahmad Fauzi"],["Nama Dinas / Instansi",dinas,setDinas,"cth: Dinas Pariwisata Kab. Kendari"],["Email",email,setEmail,"email@instansi.go.id"]].map(([lbl,val,setter,ph])=>(
-              <div key={lbl} style={{ marginBottom:12 }}>
-                <label style={L}>{lbl}</label>
-                <input type={lbl==="Email"?"email":"text"} value={val} onChange={e=>setter(e.target.value)} placeholder={ph} style={I}/>
-              </div>
-            ))}
-            <div style={{ marginBottom:12 }}>
-              <label style={L}>Password (min. 8 karakter)</label>
-              <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Buat password..." style={I}/>
-            </div>
-            <div style={{ marginBottom:18 }}>
-              <label style={L}>Konfirmasi Password</label>
-              <input type="password" value={konfirmPass} onChange={e=>setKonfirmPass(e.target.value)} placeholder="Ulangi password..." style={I}/>
-            </div>
-            <button onClick={handleRegister} disabled={loading} style={BtnPrimary}>{loading?"Mendaftarkan...":"Daftar & Buat Akun"}</button>
-            <div style={{ marginTop:12, padding:11, background:"#F0FDFA", borderRadius:8, fontSize:11, color:"#134E4A", border:"1px solid #99F6E4", lineHeight:1.5 }}>
-              Setelah mendaftar, Anda akan memiliki dashboard sendiri dengan data yang terpisah dari instansi lain.
-            </div>
-          </div>
-        )}
-
-        <div style={{ marginTop:18, textAlign:"center", fontSize:11, color:"#D1D5DB" }}>
+        </div>
+        <button onClick={handleLogin} disabled={loading} style={BtnPrimary}>{loading?"Memverifikasi...":"Masuk"}</button>
+        <div style={{ marginTop:12, padding:11, background:"#FFFBEB", borderRadius:8, fontSize:11, color:"#92400E", border:"1px solid #FDE68A", lineHeight:1.5 }}>
+          Akses terbatas — hanya akun yang telah didaftarkan yang dapat masuk.
+        </div>
+        <div style={{ marginTop:16, textAlign:"center", fontSize:11, color:"#D1D5DB" }}>
           Dibuat oleh <span style={{ fontWeight:700, color:"#9CA3AF" }}>Fadriana</span> — Sistem Manajemen Protokoler
         </div>
       </div>
     </div>
   );
 }
+
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -274,15 +234,9 @@ export default function App() {
 
   async function loadData() {
     const emailKey = localStorage.getItem("sb_email")||"";
-    if (!emailKey) return;
-    // Akun utama: protokoldata & pemasarandisparsultra share data bersama
-    // Caranya: keduanya simpan data dengan user_email = "disparsultra-main"
-    // Akun baru: simpan dengan user_email = email mereka sendiri
-    const MAIN_TAG = "disparsultra-main";
-    const MAIN_EMAILS = ["protokoldata@gmail.com","pemasarandisparsultra@gmail.com"];
-    const isMain = MAIN_EMAILS.includes(emailKey);
-    const tag = isMain ? MAIN_TAG : emailKey;
-    const params = `?select=*&user_email=eq.${encodeURIComponent(tag)}&order=tanggal.asc,waktu_mulai.asc`;
+    const params = emailKey
+      ? `?select=*&order=tanggal.asc,waktu_mulai.asc&user_email=eq.${encodeURIComponent(emailKey)}`
+      : "?select=*&order=tanggal.asc,waktu_mulai.asc";
     const data = await supabase.query("kegiatan", params);
     if (Array.isArray(data)) setKegiatanList(data);
   }
@@ -296,7 +250,7 @@ export default function App() {
     const akunKhusus = AKUN_DIIZINKAN.find(a => a.email.toLowerCase() === email.toLowerCase());
 
     if (akunKhusus) {
-      // Akun utama: password harus cocok persis dengan yang sudah ditentukan
+      // Akun khusus: password harus cocok persis
       if (akunKhusus.password !== password) {
         showNotif("Email atau password salah. Akses ditolak.", "error");
         return;
@@ -338,12 +292,6 @@ export default function App() {
     }
   }
 
-  async function handleRegister(email, password, nama, dinas) {
-    // Validasi dasar
-    if (!email || !password || !nama || !dinas) {
-      showNotif("Semua kolom wajib diisi!", "error");
-      return;
-    }
     if (password.length < 8) {
       showNotif("Password minimal 8 karakter!", "error");
       return;
@@ -364,10 +312,7 @@ export default function App() {
       if (modalMode==="add") {
         const body={...formData}; delete body.id; delete body.tanggalDisplay;
         if (supabase.userId) body.created_by=supabase.userId;
-        // Simpan tag group agar protokoldata & pemasarandisparsultra share data
-        const MAIN_EMAILS = ["protokoldata@gmail.com","pemasarandisparsultra@gmail.com"];
-        const currentEmail = localStorage.getItem("sb_email")||"";
-        body.user_email = MAIN_EMAILS.includes(currentEmail) ? "disparsultra-main" : currentEmail;
+        body.user_email = localStorage.getItem("sb_email")||"";
         await supabase.insert("kegiatan",body);
         showNotif("Kegiatan berhasil ditambahkan!");
       } else {
@@ -405,11 +350,10 @@ export default function App() {
   const upcoming=kegiatanList.filter(k=>k.tanggal>=today&&k.status!=="dibatalkan"&&k.status!=="selesai").slice(0,5);
 
   if (loading) return <LoadingScreen/>;
-  if (!isLoggedIn) return <AuthPage onLogin={handleLogin} onRegister={handleRegister} notification={notification}/>;
+  if (!isLoggedIn) return <AuthPage onLogin={handleLogin} notification={notification}/>;
 
   const isAdmin=user.role==="admin";
   const isKreatif=user.role==="tim_kreatif";
-  // protokoldata = admin (akses penuh), pemasarandisparsultra = tim_kreatif (link dokumentasi saja)
   const canEdit=user.role==="admin"||user.role==="protokoler";
 
   return (
@@ -432,7 +376,7 @@ export default function App() {
           </div>
         </div>
         <nav style={{ padding:"10px 8px", flex:1 }}>
-          {[{id:"dashboard",label:"Dashboard"},{id:"kegiatan",label:"Jadwal Kegiatan"},...(isAdmin?[{id:"pengguna",label:"Manajemen Pengguna"}]:[])].map(item=>(
+          {[{id:"dashboard",label:"Dashboard"},{id:"kegiatan",label:"Jadwal Kegiatan"},{id:"kalender",label:"Kalender"},{id:"laporan",label:"Laporan"},...(isAdmin?[{id:"pengguna",label:"Manajemen Pengguna"}]:[])].map(item=>(
             <button key={item.id} onClick={()=>setActiveMenu(item.id)} style={{ display:"flex", alignItems:"center", padding:"10px 14px", borderRadius:7, border:"none", background:activeMenu===item.id?"rgba(255,255,255,0.20)":"transparent", color:activeMenu===item.id?"white":"rgba(255,255,255,0.80)", cursor:"pointer", width:"100%", textAlign:"left", fontSize:13, fontWeight:activeMenu===item.id?600:400, marginBottom:2 }}>
               {item.label}
             </button>
@@ -632,6 +576,149 @@ export default function App() {
   );
 }
 
+// ── KOMPONEN KALENDER ──
+function KalenderView({ kegiatanList, onView }) {
+  const today = new Date();
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [searchQ, setSearchQ] = useState("");
+
+  const MONTHS = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const DAYS = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const todayStr = today.toISOString().split("T")[0];
+
+  function prevMonth() {
+    if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y=>y-1); }
+    else setCurrentMonth(m=>m-1);
+  }
+  function nextMonth() {
+    if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y=>y+1); }
+    else setCurrentMonth(m=>m+1);
+  }
+
+  function getKegiatanOnDay(day) {
+    const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+    return kegiatanList.filter(k=>k.tanggal===dateStr);
+  }
+
+  const STATUS_COLOR = {
+    akan_berlangsung: "#2563EB",
+    sedang_berlangsung: "#D97706",
+    dibatalkan: "#DC2626",
+    selesai: "#059669",
+  };
+
+  // Filter pencarian
+  const filtered = searchQ
+    ? kegiatanList.filter(k =>
+        k.nama_kegiatan?.toLowerCase().includes(searchQ.toLowerCase()) ||
+        k.lokasi?.toLowerCase().includes(searchQ.toLowerCase()) ||
+        k.pic?.toLowerCase().includes(searchQ.toLowerCase()) ||
+        formatTanggal(k.tanggal).toLowerCase().includes(searchQ.toLowerCase())
+      )
+    : [];
+
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  return (
+    <div>
+      <div style={{ marginBottom:16 }}>
+        <h1 style={{ fontSize:18,fontWeight:700,color:"#111827",margin:0 }}>Kalender Kegiatan</h1>
+        <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>Jadwal kegiatan dalam tampilan kalender</p>
+      </div>
+
+      {/* PENCARIAN */}
+      <div style={{ background:"white",borderRadius:12,padding:"14px 16px",border:"1px solid #E5E7EB",marginBottom:16 }}>
+        <label style={{ display:"block",fontSize:12,fontWeight:600,color:"#374151",marginBottom:6 }}>Cari Kegiatan</label>
+        <input
+          value={searchQ}
+          onChange={e=>setSearchQ(e.target.value)}
+          placeholder="Ketik nama kegiatan, lokasi, atau PIC..."
+          style={{ width:"100%",padding:"9px 13px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box" }}
+        />
+        {searchQ && (
+          <div style={{ marginTop:10 }}>
+            {filtered.length===0?(
+              <div style={{ fontSize:13,color:"#9CA3AF",padding:"8px 0" }}>Tidak ada kegiatan ditemukan</div>
+            ):filtered.map(k=>(
+              <div key={k.id} onClick={()=>onView(k)} style={{ display:"flex",alignItems:"center",gap:12,padding:"9px 12px",borderRadius:8,background:"#F9FAFB",cursor:"pointer",marginBottom:6,border:"1px solid #E5E7EB" }}>
+                <div style={{ width:8,height:8,borderRadius:"50%",background:STATUS_COLOR[k.status]||"#6B7280",flexShrink:0 }}/>
+                <div style={{ flex:1,minWidth:0 }}>
+                  <div style={{ fontWeight:600,fontSize:13,color:"#111827",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{k.nama_kegiatan}</div>
+                  <div style={{ fontSize:11,color:"#6B7280",marginTop:1 }}>{formatTanggal(k.tanggal)} · {k.lokasi||"-"}</div>
+                </div>
+                <div style={{ fontSize:11,fontWeight:600,color:STATUS_COLOR[k.status],whiteSpace:"nowrap" }}>
+                  {k.status==="akan_berlangsung"?"Akan Berlangsung":k.status==="sedang_berlangsung"?"Berlangsung":k.status==="selesai"?"Selesai":"Batal"}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* KALENDER */}
+      <div style={{ background:"white",borderRadius:12,border:"1px solid #E5E7EB",overflow:"hidden" }}>
+        {/* Header navigasi bulan */}
+        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 18px",borderBottom:"1px solid #E5E7EB",background:"#1E3A5F" }}>
+          <button onClick={prevMonth} style={{ background:"rgba(255,255,255,0.15)",border:"none",borderRadius:6,padding:"6px 12px",cursor:"pointer",color:"white",fontSize:16,fontWeight:600 }}>‹</button>
+          <div style={{ fontSize:15,fontWeight:700,color:"white" }}>{MONTHS[currentMonth]} {currentYear}</div>
+          <button onClick={nextMonth} style={{ background:"rgba(255,255,255,0.15)",border:"none",borderRadius:6,padding:"6px 12px",cursor:"pointer",color:"white",fontSize:16,fontWeight:600 }}>›</button>
+        </div>
+
+        {/* Nama hari */}
+        <div style={{ display:"grid",gridTemplateColumns:"repeat(7,1fr)",borderBottom:"1px solid #E5E7EB" }}>
+          {DAYS.map(d=>(
+            <div key={d} style={{ padding:"8px 4px",textAlign:"center",fontSize:11,fontWeight:700,color:"#6B7280",background:"#F9FAFB" }}>{d}</div>
+          ))}
+        </div>
+
+        {/* Grid tanggal */}
+        <div style={{ display:"grid",gridTemplateColumns:"repeat(7,1fr)" }}>
+          {cells.map((day,idx)=>{
+            if (!day) return <div key={`e${idx}`} style={{ minHeight:80,borderRight:"1px solid #F3F4F6",borderBottom:"1px solid #F3F4F6",background:"#FAFAFA" }}/>;
+            const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+            const events = getKegiatanOnDay(day);
+            const isToday = dateStr===todayStr;
+            const isSun = idx%7===0;
+            const isSat = idx%7===6;
+            return (
+              <div key={day} style={{ minHeight:80,borderRight:"1px solid #F3F4F6",borderBottom:"1px solid #F3F4F6",padding:"4px",background:isToday?"#EFF6FF":"white",position:"relative" }}>
+                <div style={{ fontSize:12,fontWeight:isToday?800:500,color:isToday?"#2563EB":isSun?"#DC2626":isSat?"#0369A1":"#374151",width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",background:isToday?"#2563EB":"transparent",color:isToday?"white":isSun?"#DC2626":isSat?"#0369A1":"#374151",marginBottom:2,fontSize:11 }}>
+                  {day}
+                </div>
+                {events.slice(0,2).map(k=>(
+                  <div key={k.id} onClick={()=>onView(k)} style={{ fontSize:10,fontWeight:600,padding:"2px 4px",borderRadius:3,marginBottom:2,cursor:"pointer",background:STATUS_COLOR[k.status]+"20",color:STATUS_COLOR[k.status],overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",lineHeight:1.4 }} title={k.nama_kegiatan}>
+                    {k.nama_kegiatan}
+                  </div>
+                ))}
+                {events.length>2&&(
+                  <div style={{ fontSize:10,color:"#6B7280",fontWeight:600 }}>+{events.length-2} lagi</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* LEGENDA */}
+      <div style={{ display:"flex",gap:16,marginTop:12,flexWrap:"wrap" }}>
+        {[["#2563EB","Akan Berlangsung"],["#D97706","Sedang Berlangsung"],["#059669","Selesai"],["#DC2626","Dibatalkan"]].map(([c,l])=>(
+          <div key={l} style={{ display:"flex",alignItems:"center",gap:6,fontSize:12,color:"#6B7280" }}>
+            <div style={{ width:10,height:10,borderRadius:2,background:c,flexShrink:0 }}/>
+            {l}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
 function KegiatanModal({ mode, data, user, isKreatif, canEdit, onSave, onUpdateLink, onClose }) {
   const initTanggal = data?.tanggal || new Date().toISOString().split("T")[0];
   const [form, setForm] = useState({
@@ -670,8 +757,9 @@ function KegiatanModal({ mode, data, user, isKreatif, canEdit, onSave, onUpdateL
         <label style={{ display:"block",fontSize:12,fontWeight:600,color:"#374151",marginBottom:5 }}>{label}</label>
         <input
           type={type}
-          value={form[field]||""}
-          onChange={e=>setForm(p=>({...p,[field]:e.target.value}))}
+          defaultValue={form[field]||""}
+          onBlur={e=>setForm(p=>({...p,[field]:e.target.value}))}
+          onChange={e=>{ form[field]=e.target.value; }}
           placeholder={placeholder}
           readOnly={isView}
           style={{ width:"100%",padding:"9px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box",background:isView?"#F9FAFB":"white",color:"#111827" }}
@@ -758,8 +846,9 @@ function KegiatanModal({ mode, data, user, isKreatif, canEdit, onSave, onUpdateL
               <div style={{ marginBottom:13 }}>
                 <label style={{ display:"block",fontSize:12,fontWeight:600,color:"#374151",marginBottom:5 }}>Keterangan</label>
                 <textarea
-                  value={form.keterangan||""}
-                  onChange={e=>setForm(p=>({...p,keterangan:e.target.value}))}
+                  defaultValue={form.keterangan}
+                  onBlur={e=>setForm(p=>({...p,keterangan:e.target.value}))}
+                  onChange={e=>{ form.keterangan=e.target.value; }}
                   placeholder="Catatan atau keterangan tambahan..."
                   style={{ width:"100%",padding:"9px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,outline:"none",minHeight:70,resize:"vertical",boxSizing:"border-box",fontFamily:"inherit" }}
                 />
