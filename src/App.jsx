@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 const SUPABASE_URL = "https://hrqppgcjzhqdnuhhvxvi.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_vKvRdKlYGvsKCKNGpgvzYA_pPrtTpb6";
@@ -66,6 +66,29 @@ const supabase = {
   async delete(table, id) {
     const res = await fetch(`${this.url}/rest/v1/${table}?id=eq.${id}`, { method: "DELETE", headers: this.headers() });
     return res.ok;
+  },
+  async signUp(email, password) {
+    const res = await fetch(`${this.url}/auth/v1/signup`, {
+      method: "POST", headers: { "Content-Type": "application/json", apikey: this.key },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error_description || data.error);
+    return data;
+  },
+  async upsertProfile(userId, nama, instansi, email) {
+    const res = await fetch(`${this.url}/rest/v1/profiles?id=eq.${userId}`, {
+      method: "PATCH", headers: { ...this.headers(), Prefer: "return=representation" },
+      body: JSON.stringify({ full_name: nama, dinas: instansi, role: "admin", email }),
+    });
+    // Jika belum ada, insert baru
+    if (!res.ok || res.status === 404) {
+      await fetch(`${this.url}/rest/v1/profiles`, {
+        method: "POST", headers: { ...this.headers(), Prefer: "return=representation" },
+        body: JSON.stringify({ id: userId, full_name: nama, dinas: instansi, role: "admin", email }),
+      });
+    }
+    return res.json();
   },
 };
 
@@ -144,10 +167,14 @@ function LoadingScreen() {
   );
 }
 
-// ── HALAMAN LOGIN ──
-function AuthPage({ onLogin, notification }) {
+// ── HALAMAN LOGIN / DAFTAR ──
+function AuthPage({ onLogin, onRegister, notification }) {
+  const [mode, setMode]         = useState("login");
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
+  const [konfirmPass, setKonfirmPass] = useState("");
+  const [nama, setNama]         = useState("");
+  const [instansi, setInstansi] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading]   = useState(false);
 
@@ -156,16 +183,42 @@ function AuthPage({ onLogin, notification }) {
     setLoading(true); await onLogin(email, password); setLoading(false);
   }
 
+  async function handleDaftar() {
+    if (!email || !password || !nama || !instansi) {
+      alert("Semua kolom wajib diisi!"); return;
+    }
+    if (password.length < 8) {
+      alert("Password minimal 8 karakter!"); return;
+    }
+    if (password !== konfirmPass) {
+      alert("Konfirmasi password tidak cocok!"); return;
+    }
+    setLoading(true); await onRegister(email, password, nama, instansi); setLoading(false);
+  }
+
+  const iStyle = { width:"100%", padding:"10px 12px", border:"1.5px solid #D1D5DB", borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box" };
+
   return (
     <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center",
       background:`linear-gradient(160deg,${T.sidebar},${T.primary})`, padding:20 }}>
-      <div style={{ background:"white", borderRadius:16, padding:"32px 28px", width:"100%", maxWidth:400,
+      <div style={{ background:"white", borderRadius:16, padding:"32px 28px", width:"100%", maxWidth:420,
         boxShadow:"0 20px 60px rgba(0,0,0,0.35)" }}>
-        <div style={{ textAlign:"center", marginBottom:24 }}>
-          <div style={{ display:"flex", justifyContent:"center", marginBottom:10 }}><LogoSultra size={54}/></div>
-          <div style={{ fontSize:16, fontWeight:800, color:T.primary, letterSpacing:0.3 }}>SISTEM INFORMASI DAN</div>
-          <div style={{ fontSize:16, fontWeight:800, color:T.primary, letterSpacing:0.3 }}>DOKUMENTASI AGENDA PIMPINAN</div>
-          <div style={{ fontSize:12, color:"#9CA3AF", marginTop:4 }}>Dinas Pariwisata Prov. Sultra</div>
+        <div style={{ textAlign:"center", marginBottom:20 }}>
+          <div style={{ display:"flex", justifyContent:"center", marginBottom:10 }}><LogoSultra size={50}/></div>
+          <div style={{ fontSize:15, fontWeight:800, color:T.primary, letterSpacing:0.3, lineHeight:1.4 }}>SISTEM INFORMASI DAN</div>
+          <div style={{ fontSize:15, fontWeight:800, color:T.primary, letterSpacing:0.3, lineHeight:1.4 }}>DOKUMENTASI AGENDA PIMPINAN</div>
+          <div style={{ fontSize:11, color:"#9CA3AF", marginTop:4 }}>Platform Manajemen Kegiatan Instansi</div>
+        </div>
+
+        {/* Tab Login / Daftar */}
+        <div style={{ display:"flex", borderBottom:`2px solid ${T.gold}33`, marginBottom:20 }}>
+          {[["login","Masuk"],["daftar","Daftar"]].map(([m,l])=>(
+            <button key={m} onClick={()=>setMode(m)} style={{ flex:1, padding:"9px 0", border:"none", background:"none",
+              fontSize:13, fontWeight:mode===m?700:400,
+              color:mode===m?T.primary:"#9CA3AF",
+              borderBottom:mode===m?`2px solid ${T.primary}`:"2px solid transparent",
+              marginBottom:-2, cursor:"pointer" }}>{l}</button>
+          ))}
         </div>
 
         {notification&&(
@@ -177,37 +230,76 @@ function AuthPage({ onLogin, notification }) {
           </div>
         )}
 
-        <div style={{ marginBottom:14 }}>
-          <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#374151", marginBottom:5 }}>Email</label>
-          <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
-            onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="email@instansi.go.id"
-            style={{ width:"100%", padding:"10px 12px", border:"1.5px solid #D1D5DB", borderRadius:8,
-              fontSize:13, outline:"none", boxSizing:"border-box" }}/>
-        </div>
-        <div style={{ marginBottom:22 }}>
-          <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#374151", marginBottom:5 }}>Password</label>
-          <div style={{ position:"relative" }}>
-            <input type={showPass?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)}
-              onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="Masukkan password"
-              style={{ width:"100%", padding:"10px 12px", paddingRight:90, border:"1.5px solid #D1D5DB",
-                borderRadius:8, fontSize:13, outline:"none", boxSizing:"border-box" }}/>
-            <button onClick={()=>setShowPass(!showPass)} style={{ position:"absolute", right:10, top:"50%",
-              transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", fontSize:11, fontWeight:600 }}>
-              {showPass?"Sembunyikan":"Tampilkan"}
+        {mode==="login"?(
+          <div>
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#374151", marginBottom:5 }}>Email</label>
+              <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
+                onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="email@instansi.go.id" style={iStyle}/>
+            </div>
+            <div style={{ marginBottom:22 }}>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#374151", marginBottom:5 }}>Password</label>
+              <div style={{ position:"relative" }}>
+                <input type={showPass?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)}
+                  onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="Masukkan password"
+                  style={{ ...iStyle, paddingRight:90 }}/>
+                <button onClick={()=>setShowPass(!showPass)} style={{ position:"absolute", right:10, top:"50%",
+                  transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", fontSize:11, fontWeight:600 }}>
+                  {showPass?"Sembunyikan":"Tampilkan"}
+                </button>
+              </div>
+            </div>
+            <button onClick={handleLogin} disabled={loading}
+              style={{ width:"100%", padding:12, background:T.primary, color:"white", border:"none", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer" }}>
+              {loading?"Memverifikasi...":"Masuk →"}
             </button>
           </div>
-        </div>
-        <button onClick={handleLogin} disabled={loading}
-          style={{ width:"100%", padding:12, background:T.primary, color:"white", border:"none", borderRadius:8,
-            fontSize:14, fontWeight:700, cursor:"pointer" }}>
-          {loading?"Memverifikasi...":"Masuk"}
-        </button>
-        <div style={{ marginTop:14, padding:11, background:T.goldBg, borderRadius:8, fontSize:11,
-          color:"#78350F", border:`1px solid ${T.goldLight}`, lineHeight:1.5 }}>
-          Akses terbatas — hanya akun yang telah didaftarkan yang dapat masuk.
-        </div>
+        ):(
+          <div>
+            <div style={{ marginBottom:12 }}>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#374151", marginBottom:5 }}>Nama Lengkap / Penanggungjawab *</label>
+              <input value={nama} onChange={e=>setNama(e.target.value)} placeholder="Nama lengkap Anda"
+                style={iStyle}/>
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#374151", marginBottom:5 }}>Nama Instansi *</label>
+              <input value={instansi} onChange={e=>setInstansi(e.target.value)} placeholder="Contoh: Dinas Pendidikan Kota Kendari"
+                style={iStyle}/>
+              <div style={{ fontSize:11, color:"#9CA3AF", marginTop:3 }}>Nama ini akan tampil di dashboard Anda</div>
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#374151", marginBottom:5 }}>Email *</label>
+              <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="email@instansi.go.id"
+                style={iStyle}/>
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#374151", marginBottom:5 }}>Password * (min. 8 karakter)</label>
+              <div style={{ position:"relative" }}>
+                <input type={showPass?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)}
+                  placeholder="Buat password" style={{ ...iStyle, paddingRight:90 }}/>
+                <button onClick={()=>setShowPass(!showPass)} style={{ position:"absolute", right:10, top:"50%",
+                  transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:"#9CA3AF", fontSize:11, fontWeight:600 }}>
+                  {showPass?"Sembunyikan":"Tampilkan"}
+                </button>
+              </div>
+            </div>
+            <div style={{ marginBottom:20 }}>
+              <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#374151", marginBottom:5 }}>Konfirmasi Password *</label>
+              <input type="password" value={konfirmPass} onChange={e=>setKonfirmPass(e.target.value)}
+                placeholder="Ulangi password" style={iStyle}/>
+            </div>
+            <button onClick={handleDaftar} disabled={loading}
+              style={{ width:"100%", padding:12, background:`linear-gradient(135deg,${T.primary},${T.primary2})`, color:"white", border:"none", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer" }}>
+              {loading?"Mendaftarkan...":"Daftar Sekarang →"}
+            </button>
+            <div style={{ marginTop:12, padding:10, background:"#F0FDF4", borderRadius:8, fontSize:11,
+              color:"#065F46", border:"1px solid #BBF7D0", lineHeight:1.6 }}>
+              ✅ Setiap akun memiliki data yang terpisah — tidak ada yang bisa melihat data instansi lain.
+            </div>
+          </div>
+        )}
         <div style={{ marginTop:14, textAlign:"center", fontSize:11, color:"#D1D5DB" }}>
-          Dibuat oleh <span style={{ fontWeight:700, color:"#9CA3AF" }}>Fadriana</span> — Sistem Manajemen Protokoler
+          Dibuat oleh <span style={{ fontWeight:700, color:"#9CA3AF" }}>Fadriana</span> — SIDAP v2.0
         </div>
       </div>
     </div>
@@ -551,6 +643,316 @@ function KegiatanModal({ mode, data, user, isKreatif, canEdit, onSave, onUpdateL
   );
 }
 
+
+// ── LAPORAN ──
+function LaporanView({ kegiatanList, user }) {
+  const now = new Date();
+  const [bulan, setBulan] = React.useState(now.getMonth());
+  const [tahun, setTahun] = React.useState(now.getFullYear());
+  const MONTHS = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+
+  const filtered = kegiatanList.filter(k => {
+    if (!k.tanggal) return false;
+    const d = new Date(k.tanggal + "T00:00:00");
+    return d.getMonth() === bulan && d.getFullYear() === tahun;
+  });
+
+  function formatTgl(dateStr) {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr + "T00:00:00");
+    return `${String(d.getDate()).padStart(2,"0")} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  }
+  function fWaktu(t) { return t ? t.slice(0,5) : "-"; }
+
+  function handleCetak() {
+    const win = window.open("","_blank");
+    const rows = filtered.map((k,i) => `
+      <tr style="background:${i%2===0?"#f9f9f9":"white"}">
+        <td style="padding:7px 10px;border:1px solid #ddd;font-size:12px">${i+1}</td>
+        <td style="padding:7px 10px;border:1px solid #ddd;font-size:12px">${formatTgl(k.tanggal)}</td>
+        <td style="padding:7px 10px;border:1px solid #ddd;font-size:12px">${fWaktu(k.waktu_mulai)}${k.waktu_selesai?" - "+fWaktu(k.waktu_selesai):""}</td>
+        <td style="padding:7px 10px;border:1px solid #ddd;font-size:12px">${k.jenis_kegiatan||"-"}</td>
+        <td style="padding:7px 10px;border:1px solid #ddd;font-size:12px;font-weight:600">${k.nama_kegiatan||"-"}</td>
+        <td style="padding:7px 10px;border:1px solid #ddd;font-size:12px">${k.lokasi||"-"}</td>
+        <td style="padding:7px 10px;border:1px solid #ddd;font-size:12px">${k.peserta_undangan||"-"}</td>
+        <td style="padding:7px 10px;border:1px solid #ddd;font-size:12px">${k.pic||"-"}</td>
+        <td style="padding:7px 10px;border:1px solid #ddd;font-size:12px">${k.status?.replace(/_/g," ")||"-"}</td>
+        <td style="padding:7px 10px;border:1px solid #ddd;font-size:12px">${k.keterangan||"-"}</td>
+      </tr>`).join("");
+
+    win.document.write(`<!DOCTYPE html><html><head><title>Laporan Kegiatan ${MONTHS[bulan]} ${tahun}</title>
+      <style>body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:24px;color:#111}
+      @media print{.no-print{display:none}}</style></head><body>
+      <div style="text-align:center;margin-bottom:20px;border-bottom:3px solid #1A5C2A;padding-bottom:16px">
+        <div style="font-size:14px;font-weight:700;color:#1A5C2A;letter-spacing:0.5px">DINAS PARIWISATA PROVINSI SULAWESI TENGGARA</div>
+        <div style="font-size:18px;font-weight:800;color:#111;margin:6px 0">LAPORAN KEGIATAN PIMPINAN</div>
+        <div style="font-size:13px;color:#555">Periode: ${MONTHS[bulan]} ${tahun}</div>
+        <div style="font-size:12px;color:#555">Dicetak oleh: ${user?.name||"Admin"} · ${new Date().toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
+      </div>
+      <div style="margin-bottom:12px;font-size:12px;color:#555">Total kegiatan: <strong>${filtered.length} kegiatan</strong></div>
+      ${filtered.length===0?'<div style="text-align:center;padding:30px;color:#999;border:1px solid #ddd;border-radius:6px">Tidak ada kegiatan pada periode ini</div>':
+      `<table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:#1A5C2A;color:white">
+          ${["No","Tanggal","Waktu","Jenis","Nama Kegiatan","Lokasi","Peserta","PIC","Status","Keterangan"].map(h=>`<th style="padding:8px 10px;text-align:left;font-size:11px;border:1px solid #ccc">${h}</th>`).join("")}
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`}
+      <div style="margin-top:40px;display:flex;justify-content:flex-end">
+        <div style="text-align:center">
+          <div style="font-size:12px;margin-bottom:60px">Kendari, ${new Date().toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"})}</div>
+          <div style="font-size:12px;font-weight:700">( __________________________ )</div>
+          <div style="font-size:11px;color:#555">Kepala Dinas Pariwisata Prov. Sultra</div>
+        </div>
+      </div>
+      <div class="no-print" style="text-align:center;margin-top:24px">
+        <button onclick="window.print()" style="padding:10px 28px;background:#1A5C2A;color:white;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer">🖨️ Cetak / Simpan PDF</button>
+      </div></body></html>`);
+    win.document.close();
+  }
+
+  return (
+    <div>
+      <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:10 }}>
+        <div>
+          <h1 style={{ fontSize:18,fontWeight:700,color:T.dark,margin:0 }}>Laporan Kegiatan</h1>
+          <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>Cetak laporan berdasarkan bulan</p>
+        </div>
+        <button onClick={handleCetak} style={{ padding:"9px 18px",background:T.primary,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer" }}>
+          🖨️ Cetak Laporan
+        </button>
+      </div>
+
+      <div style={{ background:"white",borderRadius:12,padding:"16px 18px",border:`1.5px solid ${T.gold}`,marginBottom:16 }}>
+        <div style={{ display:"flex",gap:12,alignItems:"center",flexWrap:"wrap" }}>
+          <div>
+            <label style={{ fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:4 }}>Bulan</label>
+            <select value={bulan} onChange={e=>setBulan(Number(e.target.value))}
+              style={{ padding:"8px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,outline:"none",background:"white",cursor:"pointer" }}>
+              {MONTHS.map((m,i)=><option key={i} value={i}>{m}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:4 }}>Tahun</label>
+            <select value={tahun} onChange={e=>setTahun(Number(e.target.value))}
+              style={{ padding:"8px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,outline:"none",background:"white",cursor:"pointer" }}>
+              {[2024,2025,2026,2027].map(y=><option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+          <div style={{ alignSelf:"flex-end",padding:"8px 14px",background:T.goldBg,border:`1px solid ${T.goldLight}`,borderRadius:8,fontSize:13,fontWeight:600,color:T.primary }}>
+            {filtered.length} kegiatan ditemukan
+          </div>
+        </div>
+      </div>
+
+      {filtered.length===0?(
+        <div style={{ textAlign:"center",padding:"36px 0",color:"#9CA3AF",background:"white",borderRadius:12,border:"1px solid #E5E7EB",fontSize:13 }}>
+          Tidak ada kegiatan pada {MONTHS[bulan]} {tahun}
+        </div>
+      ):(
+        <div style={{ background:"white",borderRadius:12,overflow:"auto",border:"1px solid #E5E7EB" }}>
+          <table style={{ width:"100%",borderCollapse:"collapse",minWidth:700 }}>
+            <thead>
+              <tr>{["No","Tanggal","Waktu","Jenis","Nama Kegiatan","Lokasi","PIC","Status"].map(h=>(
+                <th key={h} style={{ padding:"10px 13px",textAlign:"left",fontSize:11,fontWeight:700,color:"white",
+                  background:T.primary,whiteSpace:"nowrap",textTransform:"uppercase",letterSpacing:0.3 }}>{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {filtered.map((k,i)=>(
+                <tr key={k.id} style={{ background:i%2===0?"#FAFAFA":"white" }}>
+                  <td style={{ padding:"9px 13px",borderBottom:"1px solid #F3F4F6",fontSize:13,color:"#6B7280" }}>{i+1}</td>
+                  <td style={{ padding:"9px 13px",borderBottom:"1px solid #F3F4F6",fontSize:13,fontWeight:600,color:"#111827",whiteSpace:"nowrap" }}>{formatTgl(k.tanggal)}</td>
+                  <td style={{ padding:"9px 13px",borderBottom:"1px solid #F3F4F6",fontSize:12,color:"#6B7280",whiteSpace:"nowrap" }}>{fWaktu(k.waktu_mulai)}{k.waktu_selesai&&" - "+fWaktu(k.waktu_selesai)}</td>
+                  <td style={{ padding:"9px 13px",borderBottom:"1px solid #F3F4F6" }}>
+                    <span style={{ padding:"2px 8px",borderRadius:5,fontSize:11,fontWeight:600,background:T.goldBg,color:T.primary,border:`1px solid ${T.goldLight}` }}>
+                      {k.jenis_kegiatan?.charAt(0).toUpperCase()+k.jenis_kegiatan?.slice(1)}
+                    </span>
+                  </td>
+                  <td style={{ padding:"9px 13px",borderBottom:"1px solid #F3F4F6",fontSize:13,fontWeight:600,color:"#111827",maxWidth:200 }}>{k.nama_kegiatan}</td>
+                  <td style={{ padding:"9px 13px",borderBottom:"1px solid #F3F4F6",fontSize:13,color:"#374151" }}>{k.lokasi||"-"}</td>
+                  <td style={{ padding:"9px 13px",borderBottom:"1px solid #F3F4F6",fontSize:13,color:"#374151" }}>{k.pic||"-"}</td>
+                  <td style={{ padding:"9px 13px",borderBottom:"1px solid #F3F4F6" }}><StatusBadge status={k.status}/></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── PEJABAT ── (Admin: bisa tambah/hapus | Tim Kreatif: hanya lihat)
+function PejabatView() {
+  const [list, setList] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem("pejabat_list")||"[]"); } catch{ return []; }
+  });
+  const [nama, setNama]     = React.useState("");
+  const [jabatan, setJabatan] = React.useState("");
+  const [nip, setNip]       = React.useState("");
+
+  function simpan() {
+    if (!nama.trim()) return;
+    const baru = [...list, { id: Date.now(), nama: nama.trim(), jabatan: jabatan.trim(), nip: nip.trim() }];
+    setList(baru);
+    localStorage.setItem("pejabat_list", JSON.stringify(baru));
+    setNama(""); setJabatan(""); setNip("");
+  }
+  function hapus(id) {
+    const baru = list.filter(p=>p.id!==id);
+    setList(baru);
+    localStorage.setItem("pejabat_list", JSON.stringify(baru));
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom:16 }}>
+        <h1 style={{ fontSize:18,fontWeight:700,color:T.dark,margin:0 }}>Nama Pejabat</h1>
+        <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>Daftar pejabat Dinas Pariwisata Prov. Sultra</p>
+      </div>
+      <div style={{ background:"white",borderRadius:12,padding:"16px 18px",border:`1.5px solid ${T.gold}`,marginBottom:16 }}>
+        <h3 style={{ fontSize:13,fontWeight:700,color:T.primary,margin:"0 0 12px" }}>Tambah Pejabat Baru</h3>
+        <div style={{ display:"flex",gap:10,flexWrap:"wrap" }}>
+          <input value={nama} onChange={e=>setNama(e.target.value)} placeholder="Nama lengkap..."
+            style={{ flex:"2 1 180px",padding:"9px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,outline:"none" }}/>
+          <input value={jabatan} onChange={e=>setJabatan(e.target.value)} placeholder="Jabatan..."
+            style={{ flex:"2 1 180px",padding:"9px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,outline:"none" }}/>
+          <input value={nip} onChange={e=>setNip(e.target.value)} placeholder="NIP (opsional)..."
+            style={{ flex:"1 1 140px",padding:"9px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,outline:"none" }}/>
+          <button onClick={simpan} style={{ padding:"9px 18px",background:T.primary,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",flexShrink:0 }}>+ Tambah</button>
+        </div>
+      </div>
+      {list.length===0?(
+        <div style={{ textAlign:"center",padding:"36px 0",color:"#9CA3AF",background:"white",borderRadius:12,border:"1px solid #E5E7EB",fontSize:13 }}>
+          Belum ada data pejabat. Tambahkan di atas.
+        </div>
+      ):(
+        <div style={{ background:"white",borderRadius:12,overflow:"auto",border:"1px solid #E5E7EB" }}>
+          <table style={{ width:"100%",borderCollapse:"collapse" }}>
+            <thead>
+              <tr>{["No","Nama","Jabatan","NIP","Aksi"].map(h=>(
+                <th key={h} style={{ padding:"10px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:"white",background:T.primary,textTransform:"uppercase",letterSpacing:0.3 }}>{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {list.map((p,i)=>(
+                <tr key={p.id} style={{ background:i%2===0?"#FAFAFA":"white" }}>
+                  <td style={{ padding:"10px 14px",borderBottom:"1px solid #F3F4F6",fontSize:13,color:"#6B7280" }}>{i+1}</td>
+                  <td style={{ padding:"10px 14px",borderBottom:"1px solid #F3F4F6",fontSize:13,fontWeight:600,color:"#111827" }}>{p.nama}</td>
+                  <td style={{ padding:"10px 14px",borderBottom:"1px solid #F3F4F6",fontSize:13,color:"#374151" }}>{p.jabatan||"-"}</td>
+                  <td style={{ padding:"10px 14px",borderBottom:"1px solid #F3F4F6",fontSize:13,color:"#6B7280",fontFamily:"monospace" }}>{p.nip||"-"}</td>
+                  <td style={{ padding:"10px 14px",borderBottom:"1px solid #F3F4F6" }}>
+                    <button onClick={()=>hapus(p.id)} style={{ padding:"4px 10px",background:"#FEF2F2",color:"#DC2626",border:"none",borderRadius:5,fontSize:11,fontWeight:600,cursor:"pointer" }}>Hapus</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PejabatViewReadOnly() {
+  const [list] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem("pejabat_list")||"[]"); } catch{ return []; }
+  });
+  return (
+    <div>
+      <div style={{ marginBottom:16 }}>
+        <h1 style={{ fontSize:18,fontWeight:700,color:T.dark,margin:0 }}>Nama Pejabat</h1>
+        <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>Daftar pejabat Dinas Pariwisata Prov. Sultra</p>
+      </div>
+      {list.length===0?(
+        <div style={{ textAlign:"center",padding:"36px 0",color:"#9CA3AF",background:"white",borderRadius:12,border:"1px solid #E5E7EB",fontSize:13 }}>Belum ada data pejabat.</div>
+      ):(
+        <div style={{ background:"white",borderRadius:12,overflow:"auto",border:"1px solid #E5E7EB" }}>
+          <table style={{ width:"100%",borderCollapse:"collapse" }}>
+            <thead>
+              <tr>{["No","Nama","Jabatan","NIP"].map(h=>(
+                <th key={h} style={{ padding:"10px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:"white",background:T.primary,textTransform:"uppercase",letterSpacing:0.3 }}>{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {list.map((p,i)=>(
+                <tr key={p.id} style={{ background:i%2===0?"#FAFAFA":"white" }}>
+                  <td style={{ padding:"10px 14px",borderBottom:"1px solid #F3F4F6",fontSize:13,color:"#6B7280" }}>{i+1}</td>
+                  <td style={{ padding:"10px 14px",borderBottom:"1px solid #F3F4F6",fontSize:13,fontWeight:600,color:"#111827" }}>{p.nama}</td>
+                  <td style={{ padding:"10px 14px",borderBottom:"1px solid #F3F4F6",fontSize:13,color:"#374151" }}>{p.jabatan||"-"}</td>
+                  <td style={{ padding:"10px 14px",borderBottom:"1px solid #F3F4F6",fontSize:13,color:"#6B7280",fontFamily:"monospace" }}>{p.nip||"-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── PETUNJUK PENGGUNAAN ──
+function PetunjukView({ isAdmin }) {
+  const [link, setLink]   = React.useState(() => localStorage.getItem("petunjuk_link")||"");
+  const [edit, setEdit]   = React.useState(false);
+  const [input, setInput] = React.useState(link);
+
+  function simpanLink() {
+    localStorage.setItem("petunjuk_link", input);
+    setLink(input); setEdit(false);
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom:16 }}>
+        <h1 style={{ fontSize:18,fontWeight:700,color:T.dark,margin:0 }}>Petunjuk Penggunaan</h1>
+        <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>Panduan penggunaan dashboard</p>
+      </div>
+
+      {isAdmin&&(
+        <div style={{ background:"white",borderRadius:12,padding:"16px 18px",border:`1.5px solid ${T.gold}`,marginBottom:16 }}>
+          <h3 style={{ fontSize:13,fontWeight:700,color:T.primary,margin:"0 0 10px" }}>⚙️ Pengaturan Link Dokumen (Admin)</h3>
+          {!edit?(
+            <div style={{ display:"flex",alignItems:"center",gap:10,flexWrap:"wrap" }}>
+              <div style={{ flex:1,padding:"9px 12px",background:"#F9FAFB",borderRadius:8,border:"1px solid #E5E7EB",fontSize:13,color:link?"#111827":"#9CA3AF",wordBreak:"break-all" }}>
+                {link||"Belum ada link yang diupload"}
+              </div>
+              <button onClick={()=>{setInput(link);setEdit(true);}} style={{ padding:"9px 16px",background:T.primary,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",flexShrink:0 }}>
+                {link?"✏️ Ubah Link":"+ Upload Link"}
+              </button>
+            </div>
+          ):(
+            <div style={{ display:"flex",gap:10,flexWrap:"wrap" }}>
+              <input value={input} onChange={e=>setInput(e.target.value)} placeholder="https://drive.google.com/..."
+                style={{ flex:1,padding:"9px 12px",border:"1.5px solid #E5E7EB",borderRadius:8,fontSize:13,outline:"none" }}/>
+              <button onClick={simpanLink} style={{ padding:"9px 16px",background:T.primary,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer" }}>Simpan</button>
+              <button onClick={()=>setEdit(false)} style={{ padding:"9px 14px",border:"1px solid #E5E7EB",borderRadius:8,background:"white",fontSize:13,cursor:"pointer" }}>Batal</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ background:"white",borderRadius:12,padding:"24px",border:"1px solid #E5E7EB" }}>
+        {link?(
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontSize:40,marginBottom:12 }}>📖</div>
+            <div style={{ fontSize:15,fontWeight:700,color:T.dark,marginBottom:6 }}>Dokumen Petunjuk Tersedia</div>
+            <div style={{ fontSize:13,color:"#6B7280",marginBottom:18 }}>Klik tombol di bawah untuk membuka petunjuk penggunaan dashboard</div>
+            <a href={link} target="_blank" rel="noopener noreferrer"
+              style={{ display:"inline-flex",alignItems:"center",gap:8,padding:"11px 24px",background:T.primary,color:"white",borderRadius:9,textDecoration:"none",fontSize:14,fontWeight:700 }}>
+              📂 Buka Dokumen Petunjuk
+            </a>
+          </div>
+        ):(
+          <div style={{ textAlign:"center",padding:"20px 0",color:"#9CA3AF",fontSize:13 }}>
+            {isAdmin?"Belum ada link dokumen. Upload link di atas.":"Petunjuk penggunaan belum tersedia. Hubungi admin."}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── APP UTAMA ──
 export default function App() {
   const [isLoggedIn,        setIsLoggedIn]        = useState(false);
@@ -585,9 +987,19 @@ export default function App() {
     setLoading(false);
   }
 
-  // Kedua akun (admin & tim_kreatif) berbagi data yang SAMA
-  async function loadData() {
-    const data = await supabase.query("kegiatan", "?select=*&order=tanggal.asc,waktu_mulai.asc");
+  // Isolasi data: akun khusus share data bersama, akun mandiri punya data sendiri
+  async function loadData(emailOverride) {
+    const email = emailOverride || localStorage.getItem("sb_email") || "";
+    const isAkunKhusus = AKUN_DIIZINKAN.some(a => a.email.toLowerCase() === email.toLowerCase());
+    let params;
+    if (isAkunKhusus) {
+      // Akun khusus: lihat semua data milik kedua akun khusus
+      params = "?select=*&order=tanggal.asc,waktu_mulai.asc&or=(owner_email.eq.protokoldata@gmail.com,owner_email.eq.pemasarandisparsultra@gmail.com,owner_email.is.null)";
+    } else {
+      // Akun mandiri: hanya lihat data miliknya sendiri
+      params = `?select=*&order=tanggal.asc,waktu_mulai.asc&owner_email=eq.${encodeURIComponent(email)}`;
+    }
+    const data = await supabase.query("kegiatan", params);
     if (Array.isArray(data)) setKegiatanList(data);
   }
 
@@ -596,26 +1008,62 @@ export default function App() {
   }
 
   async function handleLogin(email, password) {
-    // HANYA izinkan dua akun terdaftar — tolak semua email/password lain
-    const akun = AKUN_DIIZINKAN.find(a => a.email.toLowerCase() === email.toLowerCase());
-    if (!akun) {
-      showNotif("Akses ditolak. Email tidak terdaftar dalam sistem.", "error");
-      return;
+    // Cek apakah akun khusus (hardcoded)
+    const akunKhusus = AKUN_DIIZINKAN.find(a => a.email.toLowerCase() === email.toLowerCase());
+
+    if (akunKhusus) {
+      // Akun khusus: validasi password lokal
+      if (akunKhusus.password !== password) {
+        showNotif("Password salah. Akses ditolak.", "error"); return;
+      }
+      try { await supabase.signIn(email, password); } catch(e) {}
+      supabase.userRole = akunKhusus.role;
+      localStorage.setItem("sb_email", email);
+      localStorage.setItem("sb_role", akunKhusus.role);
+      localStorage.setItem("sb_name", akunKhusus.nama);
+      localStorage.setItem("sb_dinas", akunKhusus.dinas);
+      setUser({ email, role: akunKhusus.role, name: akunKhusus.nama, dinas: akunKhusus.dinas });
+      await loadData(email);
+      setIsLoggedIn(true);
+      showNotif("Selamat datang, " + akunKhusus.nama + "!");
+    } else {
+      // Akun daftar mandiri: validasi via Supabase
+      try {
+        const loginData = await supabase.signIn(email, password);
+        const userId = loginData.user?.id || supabase.userId;
+        // Ambil profil dari Supabase
+        const profile = await supabase.getProfile();
+        const finalName  = profile?.full_name || email;
+        const finalDinas = profile?.dinas || "";
+        const finalRole  = profile?.role || "admin";
+        supabase.userRole = finalRole;
+        localStorage.setItem("sb_email", email);
+        localStorage.setItem("sb_role", finalRole);
+        localStorage.setItem("sb_name", finalName);
+        localStorage.setItem("sb_dinas", finalDinas);
+        setUser({ email, role: finalRole, name: finalName, dinas: finalDinas });
+        await loadData(email);
+        setIsLoggedIn(true);
+        showNotif("Selamat datang, " + finalName + "!");
+      } catch(e) {
+        showNotif("Email atau password salah.", "error");
+      }
     }
-    if (akun.password !== password) {
-      showNotif("Password salah. Akses ditolak.", "error");
-      return;
+  }
+
+  async function handleRegister(email, password, nama, instansi) {
+    try {
+      // 1. Daftarkan ke Supabase Auth
+      const data = await supabase.signUp(email, password);
+      const userId = data.user?.id;
+      // 2. Simpan profil ke tabel profiles
+      if (userId) {
+        await supabase.upsertProfile(userId, nama, instansi, email);
+      }
+      showNotif("Pendaftaran berhasil! Silakan cek email untuk konfirmasi, lalu login.", "success");
+    } catch(e) {
+      showNotif("Gagal mendaftar: " + e.message, "error");
     }
-    try { await supabase.signIn(email, password); } catch(e) {}
-    supabase.userRole = akun.role;
-    localStorage.setItem("sb_email", email);
-    localStorage.setItem("sb_role", akun.role);
-    localStorage.setItem("sb_name", akun.nama);
-    localStorage.setItem("sb_dinas", akun.dinas);
-    setUser({ email, role: akun.role, name: akun.nama, dinas: akun.dinas });
-    await loadData();
-    setIsLoggedIn(true);
-    showNotif("Selamat datang, " + akun.nama + "!");
   }
 
   async function handleLogout() {
@@ -627,6 +1075,7 @@ export default function App() {
       if (modalMode==="add") {
         const body = {...formData}; delete body.id; delete body.tanggalDisplay;
         if (supabase.userId) body.created_by = supabase.userId;
+        body.owner_email = localStorage.getItem("sb_email") || "";
         const result = await supabase.insert("kegiatan", body);
         if (!result || (Array.isArray(result) && result.length===0))
           throw new Error("Data tidak tersimpan, coba lagi");
@@ -673,7 +1122,7 @@ export default function App() {
   };
 
   if (loading)    return <LoadingScreen/>;
-  if (!isLoggedIn) return <AuthPage onLogin={handleLogin} notification={notification}/>;
+  if (!isLoggedIn) return <AuthPage onLogin={handleLogin} onRegister={handleRegister} notification={notification}/>;
 
   const isAdmin   = user.role==="admin";
   const isKreatif = user.role==="tim_kreatif";
@@ -681,13 +1130,24 @@ export default function App() {
   const openView  = k=>{ setSelectedKegiatan(k); setModalMode("view"); setShowModal(true); };
 
   const MENU_ITEMS = [
-    {id:"dashboard", label:"🏠  Dashboard"},
-    {id:"kalender",  label:"📅  Kalender"},
-    {id:"kegiatan",  label:"📋  Jadwal Kegiatan"},
+    {id:"dashboard",  label:"🏠  Dashboard"},
+    {id:"kalender",   label:"📅  Kalender"},
+    {id:"kegiatan",   label:"📋  Jadwal Kegiatan"},
+    {id:"laporan",    label:"📄  Laporan"},
+    {id:"pejabat",    label:"👤  Nama Pejabat"},
+    {id:"petunjuk",   label:"📖  Petunjuk Penggunaan"},
     ...(isAdmin?[{id:"pengguna",label:"👥  Pengguna"}]:[]),
   ];
 
-  const HEADER_TITLES = { dashboard:"Dashboard", kalender:"Kalender Kegiatan", kegiatan:"Jadwal Kegiatan", pengguna:"Manajemen Pengguna" };
+  const HEADER_TITLES = {
+    dashboard:"Dashboard",
+    kalender:"Kalender Kegiatan",
+    kegiatan:"Jadwal Kegiatan",
+    laporan:"Laporan Kegiatan",
+    pejabat:"Nama Pejabat",
+    petunjuk:"Petunjuk Penggunaan",
+    pengguna:"Manajemen Pengguna",
+  };
 
   return (
     <div style={{ display:"flex", height:"100vh", fontFamily:"'Segoe UI',system-ui,sans-serif", background:T.bg, overflow:"hidden" }}>
@@ -797,18 +1257,30 @@ export default function App() {
                 ))}
               </div>
 
-              {/* Kalender di dashboard */}
+              {/* Kegiatan mendatang di dashboard */}
               <div style={{ background:"white",borderRadius:12,padding:"16px 18px",border:`1px solid ${T.gold}55` }}>
-                <KalenderView kegiatanList={kegiatanList} onView={openView}/>
+                <h2 style={{ fontSize:14,fontWeight:700,color:T.dark,margin:"0 0 12px" }}>Kegiatan Mendatang</h2>
+                {kegiatanList.filter(k=>k.status==="akan_berlangsung"||k.status==="sedang_berlangsung").slice(0,5).length===0?(
+                  <div style={{ textAlign:"center",padding:"20px 0",color:"#9CA3AF",fontSize:13 }}>Tidak ada kegiatan mendatang</div>
+                ):(
+                  kegiatanList.filter(k=>k.status==="akan_berlangsung"||k.status==="sedang_berlangsung").slice(0,5).map(k=>(
+                    <div key={k.id} onClick={()=>openView(k)} style={{ display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:8,marginBottom:6,cursor:"pointer",border:`1px solid ${T.gold}33`,background:T.goldBg }}>
+                      <div style={{ width:8,height:8,borderRadius:"50%",background:k.status==="sedang_berlangsung"?T.gold:T.primary,flexShrink:0 }}/>
+                      <div style={{ flex:1,minWidth:0 }}>
+                        <div style={{ fontWeight:600,fontSize:13,color:T.dark,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{k.nama_kegiatan}</div>
+                        <div style={{ fontSize:11,color:"#6B7280",marginTop:1 }}>{formatTanggal(k.tanggal)} · {formatWaktu(k.waktu_mulai)} · {k.lokasi||"-"}</div>
+                      </div>
+                      <StatusBadge status={k.status}/>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
 
           {/* ── KALENDER ── */}
           {activeMenu==="kalender"&&(
-            <div style={{ background:"white",borderRadius:12,padding:"16px 18px",border:`1px solid ${T.gold}55` }}>
-              <KalenderView kegiatanList={kegiatanList} onView={openView}/>
-            </div>
+            <KalenderView kegiatanList={kegiatanList} onView={openView}/>
           )}
 
           {/* ── JADWAL KEGIATAN ── */}
@@ -889,6 +1361,24 @@ export default function App() {
                 </div>
               )}
             </div>
+          )}
+
+          {/* ── LAPORAN ── */}
+          {activeMenu==="laporan"&&(
+            <LaporanView kegiatanList={kegiatanList} user={user}/>
+          )}
+
+          {/* ── PEJABAT ── */}
+          {activeMenu==="pejabat"&&isAdmin&&(
+            <PejabatView/>
+          )}
+          {activeMenu==="pejabat"&&!isAdmin&&(
+            <PejabatViewReadOnly/>
+          )}
+
+          {/* ── PETUNJUK ── */}
+          {activeMenu==="petunjuk"&&(
+            <PetunjukView isAdmin={isAdmin}/>
           )}
 
           {/* ── PENGGUNA ── */}
