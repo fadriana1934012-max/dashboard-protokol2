@@ -46,9 +46,19 @@ const supabase = {
     ["sb_token","sb_email","sb_role","sb_name","sb_dinas"].forEach(k => localStorage.removeItem(k));
   },
   async getProfile() {
-    const res = await fetch(`${this.url}/rest/v1/profiles?id=eq.${this.userId}&select=*`, { headers: this.headers() });
+    let url;
+    if (this.userId) {
+      url = `${this.url}/rest/v1/profiles?id=eq.${this.userId}&select=*`;
+    } else if (this.userEmail) {
+      url = `${this.url}/rest/v1/profiles?email=eq.${encodeURIComponent(this.userEmail)}&select=*`;
+    } else { return null; }
+    const res = await fetch(url, { headers: this.headers() });
     const data = await res.json();
-    if (data[0]) { this.userRole = data[0].role; this.userName = data[0].full_name || this.userEmail; }
+    if (data[0]) {
+      this.userRole = data[0].role;
+      this.userName = data[0].full_name || this.userEmail;
+      if (!this.userId) this.userId = data[0].id;
+    }
     return data[0];
   },
   async query(table, params = "") {
@@ -207,7 +217,7 @@ function AuthPage({ onLogin, onRegister, notification }) {
           <div style={{ display:"flex", justifyContent:"center", marginBottom:10 }}><LogoSultra size={50}/></div>
           <div style={{ fontSize:15, fontWeight:800, color:T.primary, letterSpacing:0.3, lineHeight:1.4 }}>SISTEM INFORMASI DAN</div>
           <div style={{ fontSize:15, fontWeight:800, color:T.primary, letterSpacing:0.3, lineHeight:1.4 }}>DOKUMENTASI AGENDA PIMPINAN</div>
-          <div style={{ fontSize:11, color:"#9CA3AF", marginTop:4 }}>Platform Manajemen Kegiatan Instansi</div>
+          <div style={{ fontSize:11, color:"#9CA3AF", marginTop:4, lineHeight:1.6 }}>Transformasi Digital untuk Pencatatan Agenda yang Lebih Terintegrasi</div>
         </div>
 
         {/* Tab Login / Daftar */}
@@ -237,7 +247,7 @@ function AuthPage({ onLogin, onRegister, notification }) {
               <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
                 onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="email@instansi.go.id" style={iStyle}/>
             </div>
-            <div style={{ marginBottom:22 }}>
+            <div style={{ marginBottom:6 }}>
               <label style={{ display:"block", fontSize:12, fontWeight:600, color:"#374151", marginBottom:5 }}>Password</label>
               <div style={{ position:"relative" }}>
                 <input type={showPass?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)}
@@ -248,6 +258,22 @@ function AuthPage({ onLogin, onRegister, notification }) {
                   {showPass?"Sembunyikan":"Tampilkan"}
                 </button>
               </div>
+            </div>
+            <div style={{ textAlign:"right", marginBottom:18 }}>
+              <button onClick={async()=>{
+                if (!email) { alert("Masukkan email kamu dulu!"); return; }
+                try {
+                  const res = await fetch(`${SUPABASE_URL}/auth/v1/recover`,{
+                    method:"POST",
+                    headers:{"Content-Type":"application/json",apikey:SUPABASE_ANON_KEY},
+                    body:JSON.stringify({email, redirect_to: window.location.origin})
+                  });
+                  if(res.ok) alert("✅ Link reset password sudah dikirim ke email kamu!");
+                  else alert("Gagal mengirim. Coba lagi.");
+                } catch(e){ alert("Gagal: "+e.message); }
+              }} style={{ background:"none",border:"none",color:T.primary,fontSize:12,cursor:"pointer",fontWeight:600,textDecoration:"underline" }}>
+                Lupa Password?
+              </button>
             </div>
             <button onClick={handleLogin} disabled={loading}
               style={{ width:"100%", padding:12, background:T.primary, color:"white", border:"none", borderRadius:8, fontSize:14, fontWeight:700, cursor:"pointer" }}>
@@ -500,16 +526,19 @@ function KegiatanModal({ mode, data, user, isKreatif, canEdit, onSave, onUpdateL
     outline:"none",boxSizing:"border-box",background:"white",color:"#111827" };
   const iStyleRO = { ...iStyle, background:"#F9FAFB" };
 
-  // Field sepenuhnya reactive
+  // Field pakai defaultValue+onBlur agar bisa ketik langsung tanpa re-render
   function Field({ label, field, placeholder="" }) {
     return (
       <div style={{ marginBottom:13 }}>
         <label style={{ display:"block",fontSize:12,fontWeight:600,color:"#374151",marginBottom:5 }}>{label}</label>
         <input
-          value={form[field]||""}
-          onChange={e=>setForm(p=>({...p,[field]:e.target.value}))}
+          key={field+"_"+mode}
+          defaultValue={form[field]||""}
+          onChange={e=>{ form[field]=e.target.value; }}
+          onBlur={e=>setForm(p=>({...p,[field]:e.target.value}))}
           placeholder={placeholder}
           readOnly={isView}
+          autoComplete="off"
           style={isView?iStyleRO:iStyle}
         />
       </div>
@@ -601,7 +630,11 @@ function KegiatanModal({ mode, data, user, isKreatif, canEdit, onSave, onUpdateL
               </div>
               <div style={{ marginBottom:13 }}>
                 <label style={{ display:"block",fontSize:12,fontWeight:600,color:"#374151",marginBottom:5 }}>Keterangan</label>
-                <textarea value={form.keterangan} onChange={e=>setForm(p=>({...p,keterangan:e.target.value}))}
+                <textarea
+                  key={"keterangan_"+mode}
+                  defaultValue={form.keterangan||""}
+                  onChange={e=>{ form.keterangan=e.target.value; }}
+                  onBlur={e=>setForm(p=>({...p,keterangan:e.target.value}))}
                   placeholder="Catatan atau keterangan tambahan..."
                   style={{ ...iStyle,minHeight:70,resize:"vertical",fontFamily:"inherit" }}/>
               </div>
@@ -980,8 +1013,26 @@ export default function App() {
     const token      = localStorage.getItem("sb_token");
     if (token && savedEmail) {
       supabase.token = token; supabase.userEmail = savedEmail; supabase.userRole = savedRole; supabase.userName = savedName;
-      setUser({ email:savedEmail, role:savedRole, name:savedName||savedEmail, dinas:savedDinas||"" });
-      await loadData();
+      const isAkunKhusus = AKUN_DIIZINKAN.some(a => a.email.toLowerCase() === savedEmail.toLowerCase());
+      let finalName  = savedName  || savedEmail;
+      let finalDinas = savedDinas || "";
+      let finalRole  = savedRole  || "admin";
+      if (!isAkunKhusus) {
+        // Akun mandiri: ambil profil terbaru dari Supabase agar nama instansi tampil benar
+        try {
+          const profile = await supabase.getProfile();
+          if (profile) {
+            finalName  = profile.full_name || savedName  || savedEmail;
+            finalDinas = profile.dinas      || savedDinas || "";
+            finalRole  = profile.role       || savedRole  || "admin";
+            localStorage.setItem("sb_name",  finalName);
+            localStorage.setItem("sb_dinas", finalDinas);
+            localStorage.setItem("sb_role",  finalRole);
+          }
+        } catch(e) {}
+      }
+      setUser({ email:savedEmail, role:finalRole, name:finalName, dinas:finalDinas });
+      await loadData(savedEmail);
       setIsLoggedIn(true);
     }
     setLoading(false);
@@ -1171,7 +1222,7 @@ export default function App() {
               <div style={{ fontSize:8,fontWeight:800,color:T.goldLight,letterSpacing:0.5,lineHeight:1.5,textTransform:"uppercase" }}>Sistem Informasi &</div>
               <div style={{ fontSize:8,fontWeight:800,color:T.goldLight,letterSpacing:0.5,lineHeight:1.5,textTransform:"uppercase" }}>Dokumentasi Agenda</div>
               <div style={{ fontSize:8,fontWeight:800,color:T.goldLight,letterSpacing:0.5,lineHeight:1.5,textTransform:"uppercase" }}>Pimpinan</div>
-              <div style={{ fontSize:9,color:"rgba(255,255,255,0.4)",marginTop:1 }}>{user.dinas||"Dinas Pariwisata Prov. Sultra"}</div>
+              <div style={{ fontSize:9,color:"rgba(255,255,255,0.4)",marginTop:1 }}>{user.dinas||user.email}</div>
             </div>
           </div>
         </div>
