@@ -817,31 +817,55 @@ function LaporanView({ kegiatanList, user }) {
 
 // ── PEJABAT ── (Admin: bisa tambah/hapus | Tim Kreatif: hanya lihat)
 function PejabatView() {
-  const [list, setList] = React.useState(() => {
-    try { return JSON.parse(localStorage.getItem("pejabat_list")||"[]"); } catch{ return []; }
-  });
-  const [nama, setNama]     = React.useState("");
+  const [list, setList]       = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [nama, setNama]       = React.useState("");
   const [jabatan, setJabatan] = React.useState("");
-  const [nip, setNip]       = React.useState("");
+  const [nip, setNip]         = React.useState("");
+  const ownerEmail = localStorage.getItem("sb_email")||"";
 
-  function simpan() {
-    if (!nama.trim()) return;
-    const baru = [...list, { id: Date.now(), nama: nama.trim(), jabatan: jabatan.trim(), nip: nip.trim() }];
-    setList(baru);
-    localStorage.setItem("pejabat_list", JSON.stringify(baru));
-    setNama(""); setJabatan(""); setNip("");
+  React.useEffect(() => { loadPejabat(); }, []);
+
+  async function loadPejabat() {
+    setLoading(true);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/pejabat?owner_email=eq.${encodeURIComponent(ownerEmail)}&order=created_at.asc&select=*`, {
+        headers: { "Content-Type":"application/json", apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${localStorage.getItem("sb_token")||""}` }
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) setList(data);
+    } catch(e) {}
+    setLoading(false);
   }
-  function hapus(id) {
-    const baru = list.filter(p=>p.id!==id);
-    setList(baru);
-    localStorage.setItem("pejabat_list", JSON.stringify(baru));
+
+  async function simpan() {
+    if (!nama.trim()) return;
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/pejabat`, {
+        method: "POST",
+        headers: { "Content-Type":"application/json", apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${localStorage.getItem("sb_token")||""}`, Prefer:"return=representation" },
+        body: JSON.stringify({ nama: nama.trim(), jabatan: jabatan.trim(), nip: nip.trim(), owner_email: ownerEmail })
+      });
+      setNama(""); setJabatan(""); setNip("");
+      await loadPejabat();
+    } catch(e) {}
+  }
+
+  async function hapus(id) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/pejabat?id=eq.${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type":"application/json", apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${localStorage.getItem("sb_token")||""}` }
+      });
+      await loadPejabat();
+    } catch(e) {}
   }
 
   return (
     <div>
       <div style={{ marginBottom:16 }}>
         <h1 style={{ fontSize:18,fontWeight:700,color:T.dark,margin:0 }}>Nama Pejabat</h1>
-        <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>Daftar pejabat Dinas Pariwisata Prov. Sultra</p>
+        <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>Daftar pejabat instansi Anda</p>
       </div>
       <div style={{ background:"white",borderRadius:12,padding:"16px 18px",border:`1.5px solid ${T.gold}`,marginBottom:16 }}>
         <h3 style={{ fontSize:13,fontWeight:700,color:T.primary,margin:"0 0 12px" }}>Tambah Pejabat Baru</h3>
@@ -855,7 +879,9 @@ function PejabatView() {
           <button onClick={simpan} style={{ padding:"9px 18px",background:T.primary,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",flexShrink:0 }}>+ Tambah</button>
         </div>
       </div>
-      {list.length===0?(
+      {loading?(
+        <div style={{ textAlign:"center",padding:"36px 0",color:"#9CA3AF",fontSize:13 }}>Memuat data...</div>
+      ):list.length===0?(
         <div style={{ textAlign:"center",padding:"36px 0",color:"#9CA3AF",background:"white",borderRadius:12,border:"1px solid #E5E7EB",fontSize:13 }}>
           Belum ada data pejabat. Tambahkan di atas.
         </div>
@@ -888,14 +914,27 @@ function PejabatView() {
 }
 
 function PejabatViewReadOnly() {
-  const [list] = React.useState(() => {
-    try { return JSON.parse(localStorage.getItem("pejabat_list")||"[]"); } catch{ return []; }
-  });
+  const [list, setList]       = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const ownerEmail = localStorage.getItem("sb_email")||"";
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/pejabat?owner_email=eq.${encodeURIComponent(ownerEmail)}&order=created_at.asc&select=*`, {
+          headers: { "Content-Type":"application/json", apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${localStorage.getItem("sb_token")||""}` }
+        });
+        const data = await res.json();
+        if (Array.isArray(data)) setList(data);
+      } catch(e) {}
+      setLoading(false);
+    })();
+  }, []);
   return (
     <div>
       <div style={{ marginBottom:16 }}>
         <h1 style={{ fontSize:18,fontWeight:700,color:T.dark,margin:0 }}>Nama Pejabat</h1>
-        <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>Daftar pejabat Dinas Pariwisata Prov. Sultra</p>
+        <p style={{ fontSize:12,color:"#6B7280",margin:"3px 0 0" }}>Daftar pejabat instansi Anda</p>
       </div>
       {list.length===0?(
         <div style={{ textAlign:"center",padding:"36px 0",color:"#9CA3AF",background:"white",borderRadius:12,border:"1px solid #E5E7EB",fontSize:13 }}>Belum ada data pejabat.</div>
@@ -926,13 +965,39 @@ function PejabatViewReadOnly() {
 
 // ── PETUNJUK PENGGUNAAN ──
 function PetunjukView({ isAdmin }) {
-  const [link, setLink]   = React.useState(() => localStorage.getItem("petunjuk_link")||"");
+  const [link, setLink]   = React.useState("");
   const [edit, setEdit]   = React.useState(false);
-  const [input, setInput] = React.useState(link);
+  const [input, setInput] = React.useState("");
+  const ownerEmail = localStorage.getItem("sb_email")||"";
 
-  function simpanLink() {
-    localStorage.setItem("petunjuk_link", input);
-    setLink(input); setEdit(false);
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/pengaturan?owner_email=eq.${encodeURIComponent(ownerEmail)}&key=eq.petunjuk_link&select=value`, {
+          headers: { "Content-Type":"application/json", apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${localStorage.getItem("sb_token")||""}` }
+        });
+        const data = await res.json();
+        if (Array.isArray(data) && data[0]?.value) {
+          setLink(data[0].value); setInput(data[0].value);
+        }
+      } catch(e) {}
+    })();
+  }, []);
+
+  async function simpanLink() {
+    try {
+      // Coba update dulu, kalau tidak ada baru insert
+      const resDel = await fetch(`${SUPABASE_URL}/rest/v1/pengaturan?owner_email=eq.${encodeURIComponent(ownerEmail)}&key=eq.petunjuk_link`, {
+        method: "DELETE",
+        headers: { "Content-Type":"application/json", apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${localStorage.getItem("sb_token")||""}` }
+      });
+      await fetch(`${SUPABASE_URL}/rest/v1/pengaturan`, {
+        method: "POST",
+        headers: { "Content-Type":"application/json", apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${localStorage.getItem("sb_token")||""}`, Prefer:"return=representation" },
+        body: JSON.stringify({ owner_email: ownerEmail, key: "petunjuk_link", value: input })
+      });
+      setLink(input); setEdit(false);
+    } catch(e) { alert("Gagal menyimpan: "+e.message); }
   }
 
   return (
